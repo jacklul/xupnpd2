@@ -241,6 +241,7 @@ void luas::sendurl(const std::string& url)
 std::string luas::translate_url(const std::string& url_translator,const std::string& url)
 {
     std::string real_url;
+    std::string script=!cfg::lua_script.empty()?cfg::lua_script:"xupnpd.lua";
 
     lua_State* st=lua_open();
 
@@ -248,7 +249,7 @@ std::string luas::translate_url(const std::string& url_translator,const std::str
     {
         reglibs(st);
 
-        if(!luaL_loadfile(st,"xupnpd.lua") && !lua_pcall(st,0,0,0))
+        if(!luaL_loadfile(st,script.c_str()) && !lua_pcall(st,0,0,0))
         {
             lua_getglobal(st,(url_translator+"_translate_url").c_str());
 

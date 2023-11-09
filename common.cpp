@@ -92,6 +92,8 @@ namespace cfg
     bool daemon_mode=false;
     std::string http_proxy;
     int startup_delay=0;
+    std::string lua_script;
+    std::string uuid_file;
 
     std::string www_location;
     std::string http_addr;
@@ -149,6 +151,8 @@ namespace cfg
         { "daemon_mode",                tbol,   0,      0,      &daemon_mode                    },
         { "http_proxy",                 tstr,   0,      512,    &http_proxy                     },
         { "sleep",                      tint,   0,      60,     &startup_delay                  },
+        { "lua_script",                 tstr,   1,      512,    &lua_script                     },
+        { "uuid_file",                  tstr,   1,      512,    &uuid_file                      },
         { NULL,                         0,      0,      0,      NULL                            }
     };
 
@@ -216,9 +220,9 @@ void utils::rm_last_slash(std::string& s)
 
 std::string utils::uuid_gen(void)
 {
-    static const char uuid_dat[]="xupnpd.uid";
+    std::string uuid_dat=!cfg::uuid_file.empty()?cfg::uuid_file:"xupnpd.uid";
 
-    FILE* fp=fopen(uuid_dat,"rb");
+    FILE* fp=fopen(uuid_dat.c_str(),"rb");
 
     if(fp)
     {
@@ -273,7 +277,7 @@ std::string utils::uuid_gen(void)
 #endif /* __FreeBSD__ */
 #endif /* _WIN32 */
 
-    fp=fopen(uuid_dat,"wb");
+    fp=fopen(uuid_dat.c_str(),"wb");
 
     if(fp)
     {

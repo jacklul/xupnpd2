@@ -71,6 +71,8 @@ namespace cfg
     extern bool         daemon_mode;
     extern std::string  http_proxy;
     extern int          startup_delay;
+    extern std::string  lua_script;
+    extern std::string  uuid_file;
 
     extern std::string  www_location;
     extern std::string  http_addr;
