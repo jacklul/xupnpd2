@@ -71,6 +71,7 @@ namespace cfg
     int http_max_post_size=0;
     std::string http_www_root;
     std::string http_templates;
+    std::string http_user_agent;
     int live_rcv_timeout=0;
     int live_snd_timeout=0;
     std::string upnp_device_name;
@@ -130,6 +131,7 @@ namespace cfg
         { "http_max_post_size",         tint,   1,      999999, &http_max_post_size             },
         { "http_www_root",              tstr,   1,      512,    &http_www_root                  },
         { "http_templates",             tstr,   0,      1024,   &http_templates                 },
+        { "http_user_agent",            tstr,   0,      512,    &http_user_agent                },
         { "live_rcv_timeout",           tint,   1,      9999,   &live_rcv_timeout               },
         { "live_snd_timeout",           tint,   1,      9999,   &live_snd_timeout               },
         { "upnp_device_name",           tstr,   0,      64,     &upnp_device_name               },

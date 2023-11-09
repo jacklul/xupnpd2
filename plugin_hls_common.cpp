@@ -348,7 +348,7 @@ bool hls::stream::_open(const std::string& url,const std::string& range,const st
         std::string req_data;
 
         req_data=utils::format("%s %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: %s\r\nConnection: close\r\n",post_data.empty()?"GET":"POST",
-            resource.c_str(),host.c_str(),user_agent.empty()?"Mozilla/5.0":user_agent.c_str());
+            resource.c_str(),host.c_str(),user_agent.empty()?(cfg::http_user_agent.empty()?"Mozilla/5.0":cfg::http_user_agent.c_str()):user_agent.c_str());
 
         if(!range.empty())
             req_data+=utils::format("Range: %s\r\n",range.c_str());

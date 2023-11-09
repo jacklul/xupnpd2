@@ -50,6 +50,7 @@ namespace cfg
     extern int          http_max_post_size;
     extern std::string  http_www_root;
     extern std::string  http_templates;
+    extern std::string  http_user_agent;
     extern int          live_rcv_timeout;
     extern int          live_snd_timeout;
     extern std::string  upnp_device_name;
