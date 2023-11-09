@@ -12,6 +12,11 @@ page_size=15
 
 total,t=browse(objid,page,page_size)
 
+if t == nil or total == nil then
+    http:out('No entries<br>\n')
+    return
+end
+
 base=(page-1)*page_size
 
 for i,j in ipairs(t) do
