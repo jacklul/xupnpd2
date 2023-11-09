@@ -4,6 +4,7 @@
  * http://xupnpd.org
  */
 
+#include "common.h"
 #include "http.h"
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -28,6 +29,21 @@
 #include <io.h>
 #include <winsock2.h>
 #endif /* _WIN32 */
+
+#ifndef __has_include
+  static_assert(false, "__has_include not supported");
+#else
+#  if __cplusplus >= 201703L && __has_include(<filesystem>)
+#    include <filesystem>
+     namespace fs = std::filesystem;
+#  elif __has_include(<experimental/filesystem>)
+#    include <experimental/filesystem>
+     namespace fs = std::experimental::filesystem;
+#  elif __has_include(<boost/filesystem.hpp>)
+#    include <boost/filesystem.hpp>
+     namespace fs = boost::filesystem;
+#  endif
+#endif
 
 namespace http
 {
@@ -915,29 +931,40 @@ bool http::req::main(void)
         if(method!="GET" && method!="HEAD" && method!="POST")
             return headers(405,false);
 
-        // tamplate
-        if(utils::is_template(url))
+        struct stat buffer;
+
+        if (stat((*this,cfg::http_www_root+url).c_str(), &buffer) == 0)
         {
-            std::string s; utils::read_template(cfg::http_www_root+url,s);
+            if(buffer.st_mode & S_IFDIR || ! (buffer.st_mode & S_IFREG))
+                return headers(403,false);
 
-            headers(200,false,s.length(),content_type_by_name(url));
-
-            if(method!="HEAD")
+            // tamplate
+            if(utils::is_template(url))
             {
-                if(!out->write(s.c_str(),s.length()))
-                    return false;
+                std::string s; utils::read_template(cfg::http_www_root+url,s);
+
+                headers(200,false,s.length(),content_type_by_name(url));
+
+                if(method!="HEAD")
+                {
+                    if(!out->write(s.c_str(),s.length()))
+                        return false;
+                }
+
+                return true;
             }
-
-            return true;
-        }else
-        {
-            std::string::size_type n=url.find_last_of('.');
-
-            if(n!=std::string::npos && !strcmp(url.c_str()+n+1,"lua"))  // lua script
-                return scripting::main(*this,cfg::http_www_root+url);
             else
-                return sendfile(cfg::http_www_root+url);                // file
+            {
+                std::string::size_type n=url.find_last_of('.');
+
+                if(n!=std::string::npos && !strcmp(url.c_str()+n+1,"lua"))  // lua script
+                        return scripting::main(*this,cfg::http_www_root+url);
+                else
+                    return sendfile(cfg::http_www_root+url);                // file
+            }
         }
+
+        return headers(404,false);
     }
 
     return headers(403,false);
