@@ -768,15 +768,18 @@ bool cfg::load(const std::string& s)
 
             break;
         case tbol:
-            if(s=="true" || s=="1" || s=="on")
-                *((bool*)t.ptr)=true;
-            else if(s=="false" || s=="0" || s=="off")
-                *((bool*)t.ptr)=false;
-            else
-                is_err=true;
+            if(!s.empty())
+            {
+                if(s=="true" || s=="1" || s=="on")
+                    *((bool*)t.ptr)=true;
+                else if(s=="false" || s=="0" || s=="off")
+                    *((bool*)t.ptr)=false;
+                else
+                    is_err=true;
 
-            if(is_err)
-                { utils::trace(utils::log_err,"invalid boolean option %s, valid values: true/false, on/off, 1/0",t.name); return false; }
+                if(is_err)
+                    { utils::trace(utils::log_err,"invalid boolean option %s, valid values: true/false, on/off, 1/0",t.name); return false; }
+            }
 
             break;
         }
@@ -834,7 +837,8 @@ bool xupnpd::all_init(int argc,char** argv)
 
     utils::trace(utils::log_info,"%s",cfg::about.c_str());
 
-    all_init_1(argc,argv);
+    if (!all_init_1(argc,argv))
+        return false;
 
     if(cfg::upnp_device_uuid.empty())
         cfg::upnp_device_uuid=utils::uuid_gen();
