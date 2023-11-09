@@ -1,4 +1,4 @@
-CFLAGS  = /EHsc /I. /I.. /I..\sqlite3 /DSQLITE_THREADSAFE=1 /DSQLITE_OMIT_LOAD_EXTENSION /I..\lua-5.1.5 /nologo 
+CFLAGS  = /EHsc /I. /I.. /I..\sqlite3 /DSQLITE_THREADSAFE=1 /DSQLITE_OMIT_LOAD_EXTENSION /DNO_SSL /I..\lua-5.1.5 /nologo
 OBJS    = ..\ssdp.obj ..\http.obj ..\db_sqlite.obj ..\scan.obj ..\common.obj ..\mime.obj ..\soap.obj ..\soap_int.obj ..\charset.obj ..\compat.obj \
  ..\scripting.obj ..\live.obj ..\md5.obj ..\luajson.obj ..\sqlite3\sqlite3.obj ..\plugin_hls_common.obj ..\plugin_hls.obj ..\plugin_hls_new.obj ..\plugin_udprtp.obj ..\plugin_lua.obj ..\plugin_tsfilter.obj xupnpd.res
 LIBS    = user32.lib Ws2_32.lib Shell32.lib ..\lua-5.1.5\liblua.lib

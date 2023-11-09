@@ -45,6 +45,10 @@
 #include "scan.h"
 #include "md5.h"
 
+#ifndef NO_SSL
+#include "ssl.h"
+#endif
+
 #ifdef _WIN32
 #include <io.h>
 #include <winsock2.h>
@@ -72,6 +76,10 @@ namespace cfg
     std::string http_www_root;
     std::string http_templates;
     std::string http_user_agent;
+#ifndef NO_SSL
+    bool openssl_verify=true;
+    std::string openssl_ca_location;
+#endif
     int live_rcv_timeout=0;
     int live_snd_timeout=0;
     std::string upnp_device_name;
@@ -133,6 +141,10 @@ namespace cfg
         { "http_www_root",              tstr,   1,      512,    &http_www_root                  },
         { "http_templates",             tstr,   0,      1024,   &http_templates                 },
         { "http_user_agent",            tstr,   0,      512,    &http_user_agent                },
+#ifndef NO_SSL
+        { "openssl_verify",             tbol,   0,      0,      &openssl_verify                 },
+        { "openssl_ca_location",        tstr,   0,      512,    &openssl_ca_location            },
+#endif
         { "live_rcv_timeout",           tint,   1,      9999,   &live_rcv_timeout               },
         { "live_snd_timeout",           tint,   1,      9999,   &live_snd_timeout               },
         { "upnp_device_name",           tstr,   0,      64,     &upnp_device_name               },
@@ -818,6 +830,9 @@ bool xupnpd::all_init_1(int argc,char** argv)
         { utils::trace(utils::log_err,"WinSock 2.2 initialize fail"); return false; }
 #endif
 
+    if(!scripting::init())
+        return false;
+
     // parse config
     if(!cfg::load(argc>1?argv[1]:"xupnpd.cfg"))
         return false;
@@ -891,6 +906,9 @@ bool xupnpd::all_init(int argc,char** argv)
     if(!live::init())
         return false;
 
+    if(!ssl::init())
+        return false;
+
     utils::trace(utils::log_info,"location: %s",cfg::www_location.c_str());
 
     if(cfg::disable_dlna_extras)
@@ -922,6 +940,11 @@ void xupnpd::all_done_1(void)
 
     if(utils::trace_fp && utils::trace_fp!=stdout && utils::trace_fp!=stderr)
         fclose(utils::trace_fp);
+
+#ifndef NO_SSL
+    ERR_free_strings();
+    CRYPTO_cleanup_all_ex_data();
+#endif
 }
 
 void xupnpd::all_done(void)
@@ -937,6 +960,10 @@ void xupnpd::all_done(void)
     http::done();
 
     live::done();
+
+#ifndef NO_SSL
+    ssl::done();
+#endif
 
     utils::trace(utils::log_info,"bye.");
 
