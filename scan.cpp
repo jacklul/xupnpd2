@@ -342,7 +342,7 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
 
                 if(track_handler.empty())
                 {
-                    if(!strncmp(track_url.c_str(),"http://",7))
+                    if(!strncmp(track_url.c_str(),"http",4))
                     {
                         if(!strncmp(track_type.c_str(),"m3u",3))
                             track_handler="hls";
