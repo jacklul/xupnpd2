@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2011-2015 Anton Burdinuk
  * clark15b@gmail.com
  * https://tsdemuxer.googlecode.com/svn/trunk/xupnpd
@@ -9,7 +9,7 @@
 
 extern "C"
 {
-#include <lua.h>
+#include <lua5.3/lua.h>
 }
 
 #if LUA_VERSION_NUM > 501
