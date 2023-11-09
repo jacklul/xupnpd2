@@ -128,6 +128,7 @@ bool scripting::main(http::req& req,const std::string& filename)
     lua_pushstring(st,filename.c_str()); lua_setglobal(st,"SCRIPT_FILENAME");
     lua_pushstring(st,cfg::http_addr.c_str()); lua_setglobal(st,"SERVER_NAME");
     lua_pushinteger(st,cfg::http_port); lua_setglobal(st,"SERVER_PORT");
+    lua_pushboolean(st,cfg::upnp_raw_urls); lua_setglobal(st,"RAW_URLS");
 
     if(luaL_loadfile(st,filename.c_str()) || lua_pcall(st,0,0,0))
     {

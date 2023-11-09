@@ -83,6 +83,7 @@ namespace cfg
     std::string upnp_http_type;
     std::string upnp_logo_profile;
     bool upnp_hdr_content_disp=false;
+    bool upnp_raw_urls=false;
     int log_level=utils::log_info;
     bool disable_dlna_extras=false;
     std::string db_file;
@@ -143,6 +144,7 @@ namespace cfg
         { "upnp_http_type",             tstr,   1,      6,      &upnp_http_type                 },
         { "upnp_logo_profile",          tstr,   1,      256,    &upnp_logo_profile              },
         { "upnp_hdr_content_disp",      tbol,   0,      0,      &upnp_hdr_content_disp          },
+        { "upnp_raw_urls",              tbol,   0,      0,      &upnp_raw_urls                  },
         { "log_level",                  tint,   -8,     8,      &log_level                      },
         { "disable_dlna_extras",        tbol,   0,      0,      &disable_dlna_extras            },
         { "db_file",                    tstr,   1,      512,    &db_file                        },

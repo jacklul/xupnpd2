@@ -62,6 +62,7 @@ namespace cfg
     extern std::string  upnp_http_type;
     extern std::string  upnp_logo_profile;
     extern bool         upnp_hdr_content_disp;
+    extern bool         upnp_raw_urls;
     extern int          log_level;
     extern bool         disable_dlna_extras;
     extern std::string  db_file;

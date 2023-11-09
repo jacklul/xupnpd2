@@ -4,6 +4,7 @@
  * http://xupnpd.org
  */
 
+#include "plugin_lua.h"
 #include "soap.h"
 #include "soap_int.h"
 #include "common.h"
@@ -357,14 +358,20 @@ bool soap::serialize_media(const db::object_t& row,std::string& ss,const std::st
         if(length.empty())
             length=cfg::upnp_live_length;
 
+        std::string url;
+
+        if (!cfg::upnp_raw_urls)
+            url = (cfg::www_location.c_str()) + std::string("/stream/") + (row.uuid.empty() ? row.objid : row.uuid).c_str() + "." + (t->name);
+        else
+            url = row.url;
+
         char buf[1024];
 
         int n=snprintf(buf,sizeof(buf),
             "<item id=\"%s\" parentID=\"%s\" restricted=\"true\"><dc:title>%s</dc:title><upnp:class>%s</upnp:class>%s%s<res size=\"%s\""
-            " protocolInfo=\"%s%s\">%s/stream/%s.%s</res></item>",
+            " protocolInfo=\"%s%s\">%s</res></item>",
             row.objid.c_str(),row.parentid.c_str(),esc(row.name).c_str(),t->upnp_type,
-            artist.c_str(),logo.c_str(),length.c_str(),t->upnp_proto,t->dlna_extras,cfg::www_location.c_str(),
-                row.uuid.empty()?row.objid.c_str():row.uuid.c_str(),t->name);
+            artist.c_str(),logo.c_str(),length.c_str(),t->upnp_proto,t->dlna_extras,url.c_str());
 
         ss.append(buf,n);
     }
