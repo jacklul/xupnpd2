@@ -1,0 +1,114 @@
+name: Build (and upload)
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - develop
+  workflow_dispatch:
+    inputs:
+      type:
+        type: choice
+        options:
+          - test
+          - matrix
+
+env:
+  DEPENDENCIES: uuid-dev libsqlite3-dev liblua5.3-dev libssl-dev
+  PLATFORM:
+  ARCHITECTURE:
+
+jobs:
+  build-test:
+    if: ${{ github.ref_name != 'master' || github.event.inputs.type == 'test' }}
+    concurrency: ci-${{ github.ref }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential make $DEPENDENCIES
+      env:
+        DEPENDENCIES: ${{ env.DEPENDENCIES || '' }}
+
+    - name: Compile
+      run: |
+        make
+        file xupnpd
+
+  build-matrix:
+    if: ${{ github.ref_name == 'master' || github.event.inputs.type == 'matrix' }}
+    concurrency: ci-${{ github.ref }}-${{ matrix.variant }}
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.allow-failure }}
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - linux/amd64
+          - linux/i386
+        allow-failure: [false]
+        include:
+          - variant: linux/arm64
+            allow-failure: true
+          - variant: linux/armhf
+            allow-failure: true
+          #- variant: linux/armel
+          #  allow-failure: true
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Run build script
+      run: bash .github/build.sh "${{ matrix.variant }}"
+
+    - name: Create a package
+      run: tar -czvf xupnpd2-latest-$PLATFORM-$ARCHITECTURE.tar.gz xupnpd xupnpd.cfg xupnpd.lua www/ media/ doc/ LICENSE
+      if: ${{ github.ref_name == 'master' && env.PLATFORM != '' && env.ARCHITECTURE != ''  }}
+
+    - uses: actions/upload-artifact@v3
+      if: ${{ github.ref_name == 'master' && env.PLATFORM != '' && env.ARCHITECTURE != '' }}
+      with:
+        name: build-artifact-${{ env.PLATFORM }}-${{ env.ARCHITECTURE }}
+        path: xupnpd2-latest-${{ env.PLATFORM }}-${{ env.ARCHITECTURE }}.tar.gz
+        retention-days: 1
+
+  upload:
+    if: ${{ github.ref_name == 'master' }}
+    needs: build-matrix
+    permissions:
+      pages: write
+      id-token: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: "gh-pages"
+
+      - uses: actions/download-artifact@v3
+        with:
+          path: build/
+
+      - name: Prepare new contents
+        run: |
+          mv build/*/*.tar.gz .
+          rm -fr build/
+          echo -e "<h2>Latest binaries:</h2>\n<ul>" > index.html
+          find . -type f -name "*.tar.gz" -exec sh -c 'echo "<li><a href=\"$(basename $1)\">$(basename $1)</a> - <i>$(date -r $1 -u)</i></li>" >> index.html' sh {} \;
+          echo -e "</ul>" >> index.html
+          ls -al .
+
+      - name: Rename local "gh-pages" branch
+        run: git branch -m gh-pages gh-pages.old
+
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: .
+          single-commit: true
+          force: true
