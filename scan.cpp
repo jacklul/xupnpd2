@@ -210,7 +210,7 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
         return 0;
     else
     {
-        std::string track_name,_track_ext,track_url,track_type,track_handler,track_filter;
+        std::string track_name,_track_ext,track_url,track_type,track_handler,track_filter,track_logo;
 
         std::map<std::string,std::string> track_ext;
 
@@ -362,13 +362,18 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
 
                 mime::type_t* t=mime::get_by_name(track_type);
 
+                track_logo = track_ext["logo"];
+
+                if(track_logo.empty())
+                    track_logo = track_ext["tvg-logo"];
+
                 if(t && t->upnp_proto)
                 {
                     ++objid; ++count;
 
 //                    utils::trace(utils::log_debug,"- %s [%d/%d]",track_url.c_str(),parentid,objid);
 
-                    add_media(objid,parentid,t->type,track_handler,t->id,(u_int64_t)-1,track_name,track_url,track_ext["logo"],std::string());
+                    add_media(objid,parentid,t->type,track_handler,t->id,(u_int64_t)-1,track_name,track_url,track_logo,std::string());
                 }
 
                 track_name.clear();
