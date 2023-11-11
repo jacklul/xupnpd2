@@ -18,6 +18,7 @@ on:
 
 env:
   DEPENDENCIES: uuid-dev libsqlite3-dev liblua5.3-dev libssl-dev
+  STATIC: true
   PLATFORM:
   ARCHITECTURE:
 
@@ -66,15 +67,11 @@ jobs:
     - name: Run build script
       run: bash .github/build.sh "${{ matrix.variant }}"
 
-    - name: Create a package
-      run: tar -czvf xupnpd2-latest-$PLATFORM-$ARCHITECTURE.tar.gz xupnpd xupnpd.cfg xupnpd.lua www/ media/ doc/ LICENSE
-      if: ${{ github.ref_name == 'master' && env.PLATFORM != '' && env.ARCHITECTURE != ''  }}
-
     - uses: actions/upload-artifact@v3
       if: ${{ github.ref_name == 'master' && env.PLATFORM != '' && env.ARCHITECTURE != '' }}
       with:
         name: build-artifact-${{ env.PLATFORM }}-${{ env.ARCHITECTURE }}
-        path: xupnpd2-latest-${{ env.PLATFORM }}-${{ env.ARCHITECTURE }}.tar.gz
+        path: '*.tar.gz'
         retention-days: 1
 
   upload:
@@ -96,10 +93,11 @@ jobs:
 
       - name: Prepare new contents
         run: |
-          mv build/*/*.tar.gz .
-          rm -fr build/
+          rm -fv *.tar.gz
+          mv -v build/*/*.tar.gz .
+          rm -frv build/
           echo -e "<h2>Latest binaries:</h2>\n<ul>" > index.html
-          find . -type f -name "*.tar.gz" -exec sh -c 'echo "<li><a href=\"$(basename $1)\">$(basename $1)</a> - <i>$(date -r $1 -u)</i></li>" >> index.html' sh {} \;
+          find . -type f -name "*.tar.gz" -print0 | sort -zn | xargs -0 -I{} sh -c 'echo "<li><a href=\"$(basename {})\">$(basename {})</a> - <i>$(date -r {} -u)</i></li>" >> index.html' sh {} \;
           echo -e "</ul>" >> index.html
           ls -al .
 
