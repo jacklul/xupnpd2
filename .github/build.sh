@@ -1,10 +1,26 @@
 #!/bin/bash
 #shellcheck disable=SC2086,SC2046,SC2155
 
+[ -z "$GITHUB_WORKSPACE" ] && exit 1
+cd "$GITHUB_WORKSPACE" || exit 1
+
+VARIANT="$1"
+
+[ -z "$VARIANT" ] && { echo "VARIANT is not set"; exit 1; }
+
+PLATFORM="$(echo "$VARIANT" | cut -d '/' -f 1)"
+ARCHITECTURE="$(echo "$VARIANT" | cut -d '/' -f 2)"
+
+echo "PLATFORM=$PLATFORM"
+echo "ARCHITECTURE=$ARCHITECTURE"
+
+echo "PLATFORM=$PLATFORM" >> $GITHUB_ENV
+echo "ARCHITECTURE=$ARCHITECTURE" >> $GITHUB_ENV
+
 get_toolchain() {
-    case "$1" in
+    case "$PLATFORM" in
         "linux")
-            case "$2" in
+            case "$ARCHITECTURE" in
                 "amd64")
                     TOOLCHAIN=g++-x86-64-linux-gnu
                     CROSS_CXX=x86-64-linux-gnu-g++
@@ -31,13 +47,13 @@ get_toolchain() {
                     CROSS_STRIP=arm-linux-gnueabi-strip
                 ;;
                 *)
-                    echo "Unsupported architecture: $2"
+                    echo "Unsupported architecture: $ARCHITECTURE"
                     exit 1
                 ;;
             esac
         ;;
         *)
-            echo "Unsupported platform: $1"
+            echo "Unsupported platform: $PLATFORM"
             exit 1
         ;;
     esac
@@ -94,47 +110,39 @@ EOF
 }
 
 build() {
-    EXTRA=""
-    if [ "$3" = true ]; then
-        export UFLAGS=-static
-        EXTRA="-static"
+    ECHO_EXTRA=""
+    FILE_EXTRA=""
 
-        echo "Binary will be statically linked"
+    if [ "$1" = "static" ]; then
+        export UFLAGS=-static
+        ECHO_EXTRA=" (static)"
+        FILE_EXTRA="-static"
     fi
 
-    echo "Building for $1 $2$EXTRA..."
+    FILE="xupnpd2-${GITHUB_REF_NAME}-${PLATFORM}-${ARCHITECTURE}${FILE_EXTRA}.tar.gz"
+
+    echo "Building for ${VARIANT}${ECHO_EXTRA}..."
 
     make
     file xupnpd
-    tar -czvf xupnpd2-$1-$2$EXTRA.tar.gz xupnpd xupnpd.cfg xupnpd.lua www/ media/ doc/ LICENSE
+
+    echo "Packing into $FILE..."
+
+    tar -czvf "$FILE" xupnpd xupnpd.cfg xupnpd.lua www/ media/ doc/ LICENSE
+    cat >> "$FILE.meta" << EOF
+SIZE=$(stat -c '%s' "$FILE")
+DATE=$(stat -c '%Y' "$FILE")
+EOF
 }
 
 ###################
 
-[ -z "$1" ] && exit 1
-[ -z "$GITHUB_WORKSPACE" ] && exit 1
-cd $GITHUB_WORKSPACE || exit 1
-
 set -e
 
-VARIANT="$1"
-
-PLATFORM="$(echo "$VARIANT" | cut -d '/' -f 1)"
-ARCHITECTURE="$(echo "$VARIANT" | cut -d '/' -f 2)"
-
-echo "VARIANT=$VARIANT"
-echo "PLATFORM=$PLATFORM"
-echo "ARCHITECTURE=$ARCHITECTURE"
-[ -n "$STATIC" ] && echo "STATIC=$STATIC"
-
-get_toolchain "$PLATFORM" "$ARCHITECTURE"
-
-echo "PLATFORM=$PLATFORM" >> $GITHUB_ENV
-echo "ARCHITECTURE=$ARCHITECTURE" >> $GITHUB_ENV
-
+get_toolchain
 install_dependencies "$ARCHITECTURE"
 
-build "$PLATFORM" "$ARCHITECTURE"
-{ [ "$STATIC" = "true" ] || [ "$STATIC" = true ] ; } && build "$PLATFORM" "$ARCHITECTURE" true
+build
+build static
 
 echo "Done"

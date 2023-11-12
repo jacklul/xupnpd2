@@ -1,0 +1,31 @@
+name: Test build
+
+on:
+  push:
+    branches:
+      - '**'
+      - '!master'
+      - '!develop'
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DEPENDENCIES: uuid-dev libsqlite3-dev liblua5.3-dev libssl-dev
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential make $DEPENDENCIES
+      env:
+        DEPENDENCIES: ${{ env.DEPENDENCIES || '' }}
+
+    - name: Compile
+      run: |
+        make
+        file xupnpd

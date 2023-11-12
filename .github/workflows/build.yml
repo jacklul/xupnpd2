@@ -5,46 +5,16 @@ on:
     branches:
       - master
       - develop
-  pull_request:
-    branches:
-      - develop
   workflow_dispatch:
-    inputs:
-      type:
-        type: choice
-        options:
-          - test
-          - matrix
 
 env:
+  UPLOAD_BRANCHES: master develop
+  ARTIFACTS_PATH: artifacts
   DEPENDENCIES: uuid-dev libsqlite3-dev liblua5.3-dev libssl-dev
-  STATIC: true
-  PLATFORM:
-  ARCHITECTURE:
 
 jobs:
-  build-test:
-    if: ${{ github.ref_name != 'master' || github.event.inputs.type == 'test' }}
-    concurrency: ci-${{ github.ref }}
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential make $DEPENDENCIES
-      env:
-        DEPENDENCIES: ${{ env.DEPENDENCIES || '' }}
-
-    - name: Compile
-      run: |
-        make
-        file xupnpd
-
-  build-matrix:
-    if: ${{ github.ref_name == 'master' || github.event.inputs.type == 'matrix' }}
-    concurrency: ci-${{ github.ref }}-${{ matrix.variant }}
+  build:
+    concurrency: ci-build-${{ github.ref_name }}-${{ matrix.variant }}
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.allow-failure }}
     strategy:
@@ -62,51 +32,55 @@ jobs:
           #- variant: linux/armel
           #  allow-failure: true
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Run build script
-      run: bash .github/build.sh "${{ matrix.variant }}"
+    - run: cp .github/build.sh /tmp
+
+    - run: bash /tmp/build.sh "${{ matrix.variant }}"
 
     - uses: actions/upload-artifact@v3
-      if: ${{ github.ref_name == 'master' && env.PLATFORM != '' && env.ARCHITECTURE != '' }}
+      if: ${{ env.PLATFORM != '' && env.ARCHITECTURE != '' }}
       with:
-        name: build-artifact-${{ env.PLATFORM }}-${{ env.ARCHITECTURE }}
-        path: '*.tar.gz'
+        name: build-${{ github.ref_name }}-${{ env.PLATFORM }}-${{ env.ARCHITECTURE }}
+        path: '*.tar.gz*'
         retention-days: 1
 
   upload:
-    if: ${{ github.ref_name == 'master' }}
-    needs: build-matrix
+    concurrency: ci-build-upload
+    needs: build
     permissions:
       pages: write
       id-token: write
       contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          ref: "gh-pages"
+          sparse-checkout: .github
+          sparse-checkout-cone-mode: false
+
+      - run: cp .github/upload.sh /tmp
+
+      - run: git sparse-checkout disable
+
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
 
       - uses: actions/download-artifact@v3
         with:
-          path: build/
+          path: ${{ env.ARTIFACTS_PATH }}
 
-      - name: Prepare new contents
-        run: |
-          rm -fv *.tar.gz
-          mv -v build/*/*.tar.gz .
-          rm -frv build/
-          echo -e "<h2>Latest binaries:</h2>\n<ul>" > index.html
-          find . -type f -name "*.tar.gz" -print0 | sort -zn | xargs -0 -I{} sh -c 'echo "<li><a href=\"$(basename {})\">$(basename {})</a> - <i>$(date -r {} -u)</i></li>" >> index.html' sh {} \;
-          echo -e "</ul>" >> index.html
-          ls -al .
+      - run: bash /tmp/upload.sh "${{ env.ARTIFACTS_PATH }}"
 
-      - name: Rename local "gh-pages" branch
-        run: git branch -m gh-pages gh-pages.old
+      - run: git branch -m gh-pages gh-pages.old
+        continue-on-error: true
 
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: .
+          commit-message: Uploading binaries
           single-commit: true
           force: true
