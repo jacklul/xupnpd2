@@ -42,7 +42,7 @@ find . -maxdepth 1 -type d -not -name ".git" -not -name "." -exec rm -frv {} \;
 
 echo "Creating index.html..."
 
-echo "<h2>Latest binaries for <a href="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY">$GITHUB_SERVER_URL/$GITHUB_REPOSITORY</a></h2>" > index.html
+echo "<h2>Latest binaries for <a href="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY">$GITHUB_REPOSITORY</a></h2>" > index.html
 
 for BRANCH in $UPLOAD_BRANCHES; do
     echo "<h3>\"$BRANCH\" branch:</h3>" >> index.html
