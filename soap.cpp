@@ -10,6 +10,7 @@
 #include "common.h"
 #include "db.h"
 #include "mime.h"
+#include "serialization.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -358,9 +359,22 @@ bool soap::serialize_media(const db::object_t& row,std::string& ss,const std::st
         if(length.empty())
             length=cfg::upnp_live_length;
 
+        bool raw_urls = false;
+
+        if (!row.handler.empty()) {
+            serialization::data extra = serialization::deserialize(row.extra);
+
+            const std::string extra_raw = extra.get("raw");
+
+            if (extra_raw != "")
+                raw_urls = extra_raw == "true" ? true : false;
+            else
+                raw_urls = (cfg::upnp_raw_urls && (cfg::upnp_raw_urls_exclude.empty() || cfg::upnp_raw_urls_exclude.find(row.handler) == std::string::npos));
+        }
+
         std::string url;
 
-        if (!cfg::upnp_raw_urls)
+        if (!raw_urls)
             url = (cfg::www_location.c_str()) + std::string("/stream/") + (row.uuid.empty() ? row.objid : row.uuid).c_str() + "." + (t->name);
         else
             url = row.url;

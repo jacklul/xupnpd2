@@ -92,6 +92,7 @@ namespace cfg
     std::string upnp_logo_profile;
     bool upnp_hdr_content_disp=false;
     bool upnp_raw_urls=false;
+    std::string upnp_raw_urls_exclude;
     int log_level=utils::log_info;
     bool disable_dlna_extras=false;
     std::string db_file;
@@ -157,6 +158,7 @@ namespace cfg
         { "upnp_logo_profile",          tstr,   1,      256,    &upnp_logo_profile              },
         { "upnp_hdr_content_disp",      tbol,   0,      0,      &upnp_hdr_content_disp          },
         { "upnp_raw_urls",              tbol,   0,      0,      &upnp_raw_urls                  },
+        { "upnp_raw_urls_exclude",      tstr,   0,      256,    &upnp_raw_urls_exclude          },
         { "log_level",                  tint,   -8,     8,      &log_level                      },
         { "disable_dlna_extras",        tbol,   0,      0,      &disable_dlna_extras            },
         { "db_file",                    tstr,   1,      512,    &db_file                        },
@@ -970,4 +972,14 @@ void xupnpd::all_done(void)
     all_done_1();
 }
 
+bool utils::__is_number(const std::string& s,int len)
+{
+    if(len!=-1 && s.length()!=len)
+        return false;
 
+    for(const char* p=s.c_str();*p;p++)
+        if(!isdigit(*p))
+            return false;
+
+    return true;
+}

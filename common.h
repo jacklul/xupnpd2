@@ -67,6 +67,7 @@ namespace cfg
     extern std::string  upnp_logo_profile;
     extern bool         upnp_hdr_content_disp;
     extern bool         upnp_raw_urls;
+    extern std::string  upnp_raw_urls_exclude;
     extern int          log_level;
     extern bool         disable_dlna_extras;
     extern std::string  db_file;
@@ -143,6 +144,8 @@ namespace utils
     bool is_template(const std::string& s);
 
     bool openlog(void);
+
+    bool __is_number(const std::string& s,int len);
 }
 
 #endif

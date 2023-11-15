@@ -18,6 +18,7 @@ extern "C"
 #include <ctype.h>
 #include "db.h"
 #include "scan.h"
+#include "serialization.h"
 
 bool scripting::init(void)
     { return true; }
@@ -128,7 +129,6 @@ bool scripting::main(http::req& req,const std::string& filename)
     lua_pushstring(st,filename.c_str()); lua_setglobal(st,"SCRIPT_FILENAME");
     lua_pushstring(st,cfg::http_addr.c_str()); lua_setglobal(st,"SERVER_NAME");
     lua_pushinteger(st,cfg::http_port); lua_setglobal(st,"SERVER_PORT");
-    lua_pushboolean(st,cfg::upnp_raw_urls); lua_setglobal(st,"RAW_URLS");
 
     if(luaL_loadfile(st,filename.c_str()) || lua_pcall(st,0,0,0))
     {
@@ -303,7 +303,6 @@ int scripting::lua_browse(lua_State* L)
 
             while(stmt.fetch(row))
             {
-
                 lua_newtable(L);
 
                 for(std::map<std::string,std::string>::const_iterator it=row.begin();it!=row.end();++it)
@@ -314,6 +313,22 @@ int scripting::lua_browse(lua_State* L)
 
                     lua_pushlstring(L,n.c_str(),n.length());
                     lua_pushlstring(L,v.c_str(),v.length());
+                    lua_rawset(L,-3);
+                }
+
+                {
+                    const std::string n = "use_raw_url";
+                    bool v;
+
+                    serialization::data extra = serialization::deserialize(row["extra"]);
+
+                    if (extra.get("raw") != "")
+                        v = extra.get("raw") == "true" ? true : false;
+                    else
+                        v = (cfg::upnp_raw_urls && (cfg::upnp_raw_urls_exclude.empty() || cfg::upnp_raw_urls_exclude.find(row["handler"]) == std::string::npos));
+
+                    lua_pushlstring(L,n.c_str(),n.length());
+                    lua_pushboolean(L,v);
                     lua_rawset(L,-3);
                 }
 

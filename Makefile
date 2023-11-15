@@ -9,7 +9,7 @@ LDLIBS   ?= -lm -ldl -luuid -lsqlite3 -llua5.3 -lssl -lcrypto
 LDFLAGS  ?= -Wl,-E
 UFLAGS   ?=
 
-OBJS = main.o common.o charset.o compat.o db_sqlite.o http.o live.o luajson.o md5.o mime.o plugin_hls.o plugin_hls_common.o plugin_hls_new.o plugin_lua.o plugin_tsbuf.o plugin_tsfilter.o plugin_udprtp.o scan.o scripting.o soap.o soap_int.o ssdp.o ssl.o
+OBJS = main.o common.o charset.o compat.o db_sqlite.o http.o live.o luajson.o md5.o mime.o plugin_hls.o plugin_hls_common.o plugin_hls_new.o plugin_lua.o plugin_tsbuf.o plugin_tsfilter.o plugin_udprtp.o scan.o scripting.o serialization.o soap.o soap_int.o ssdp.o ssl.o
 
 all: version $(OBJS)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(UFLAGS) -o xupnpd $(OBJS) $(LDLIBS) $(LDFLAGS)

@@ -26,7 +26,11 @@ for i,j in ipairs(t) do
         if tonumber(j.mimecode)~=32 then
             http:out(string.format('%d. %s<br>\n',base+i,j.name))
         else
-            http:out(string.format('%d. <a href="play.lua?id=%s">%s</a><br>\n',base+i,j.objid,j.name))
+            if j.use_raw_url ~= nil and j.use_raw_url == true then
+                http:out(string.format('%d. <a href="play.lua?url=%s">%s</a><br>\n',base+i,j.url,j.name))
+            else
+                http:out(string.format('%d. <a href="play.lua?id=%s">%s</a><br>\n',base+i,j.objid,j.name))
+            end
         end
     end
 end

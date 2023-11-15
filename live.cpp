@@ -8,6 +8,7 @@
 
 #include "common.h"
 #include "db.h"
+#include "mime.h"
 
 #include <list>
 
@@ -359,7 +360,7 @@ int live::split_handlers(const std::string& s,std::list<handler_desc_t>& handler
     return num;
 }
 
-bool live::sendurl(http::req* req,const std::string& url,const std::string& handler,const char* mime,std::map<std::string,std::string>& extras)
+bool live::sendurl(http::req* req,const std::string& url,const std::string& handler,const char* mime,std::map<std::string,std::string>& extras,const std::string& raw)
 {
 // hls,http,udp,file
     req->is_keep_alive=false;
@@ -421,6 +422,27 @@ bool live::sendurl(http::req* req,const std::string& url,const std::string& hand
 
         if(it!=req->hdrs.end())
             env["RANGE"]=it->second;
+    }
+
+    bool redirect_to_raw_url = false;
+
+    if (raw != "")
+        redirect_to_raw_url = raw == "true" ? true : false;
+    else if (cfg::upnp_raw_urls) {
+        if (!cfg::upnp_raw_urls_exclude.empty()) {
+            for(std::list<handler_desc_t>::const_iterator it = handlers.begin(); it != handlers.end(); ++it) {
+                const std::string& handler = (*it).handler;
+
+                if (cfg::upnp_raw_urls_exclude.find(handler) != std::string::npos) {
+                    redirect_to_raw_url = false;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (redirect_to_raw_url) {
+        return live::sendredirect(req, real_url);
     }
 
     for(std::list<handler_desc_t>::const_iterator it=handlers.begin();it!=handlers.end();++it)
@@ -498,6 +520,40 @@ bool live::sendurl(http::req* req,const std::string& url,const std::string& hand
     terminate_handlers(handlers_chain);
 
     return false;
+}
+
+bool live::sendredirect(http::req* req, const std::string& url)
+{
+    req->is_keep_alive = false;
+    req->headers(302, false, 0, std::string(), url);
+    utils::trace(utils::log_core, "redirecting request to '%s'", url.c_str());
+    return true;
+}
+
+bool live::sendplaylist(http::req* req, const std::string& type, const std::string& target, const std::string& target_ext)
+{
+    req->is_keep_alive = false;
+
+    if(strncmp(type.c_str(), "m3u", 3) != 0)
+        return false;
+
+    mime::type_t* pmime = mime::get_by_name(type);
+
+    if (!pmime)
+        return false;
+
+    live::req _req(req, pmime->mime, NULL);
+
+    std::string contents;
+
+    if (utils::__is_number(target, target.length())) { // provided objid
+        contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:-1\n%s.%s", target.c_str(), (!target_ext.empty() ? target_ext : cfg::upnp_live_type).c_str());
+    } else { // provided url
+        contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-STREAM-INF\n%s", target.c_str());
+    }
+
+    req->headers(200, false, contents.length(), pmime->mime);
+    return req->out->write(contents.c_str(), contents.length());
 }
 
 #ifndef _WIN32

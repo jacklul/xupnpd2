@@ -26,6 +26,7 @@ namespace db_sqlite
         std::string     url;
         std::string     logo;
         std::string     uuid;
+        std::string     extra;
 
         bool _is_empty;
 
@@ -37,6 +38,7 @@ namespace db_sqlite
         {
             objid.clear(); parentid.clear(); objtype=-1; items.clear();
             handler.clear(); mimecode=0; length.clear(); name.clear(); url.clear(); logo.clear(); uuid.clear();
+            extra.clear();
             _is_empty=true;
         }
     };
@@ -136,7 +138,7 @@ namespace db_sqlite
     bool add_container(int contid,int parentid,int childs_num,const std::string& name);
 
     bool add_media(int objid,int parentid,int objtype,const std::string& handler,int mimecode,u_int64_t length,const std::string& name,
-        const std::string& url,const std::string& logo,const std::string& uuid);
+        const std::string& url,const std::string& logo,const std::string& uuid,const std::string& extra);
 
     void begin_scan(void);
 

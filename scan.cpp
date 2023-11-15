@@ -14,6 +14,7 @@
 #include "mime.h"
 #include <ctype.h>
 #include "charset.h"
+#include "serialization.h"
 
 #ifndef _WIN32
 #include <dirent.h>
@@ -114,8 +115,6 @@ namespace utils
     int scan_playlist(const std::string& path,int parentid,int& objid,std::string& name);
 
     void m3u_parse_track_ext(const std::string& track_ext,std::map<std::string,std::string>& dst);
-
-    bool __is_number(const std::string& s,int len);
 }
 
 void utils::m3u_parse_track_ext(const std::string& track_ext,std::map<std::string,std::string>& dst)
@@ -210,7 +209,7 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
         return 0;
     else
     {
-        std::string track_name,_track_ext,track_url,track_type,track_handler,track_filter,track_logo;
+        std::string track_name,_track_ext,track_url,track_type,track_handler,track_filter,track_logo,track_extra;
 
         std::map<std::string,std::string> track_ext;
 
@@ -367,13 +366,28 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
                 if(track_logo.empty())
                     track_logo = track_ext["tvg-logo"];
 
+                // Extra variables can be serialized in single string stored in separate field
+                serialization::data track_extra;
+
+                std::string track_raw = track_ext["raw"];
+
+                if (track_raw.empty())
+                    track_raw = pls_ext["raw"];
+
+                bool track_raw_bool = -1;
+
+                if (track_raw == "true" || track_raw == "1")
+                    track_extra.set("raw", "true");
+                else if (track_raw == "false" || track_raw == "0")
+                    track_extra.set("raw", "false");
+
                 if(t && t->upnp_proto)
                 {
                     ++objid; ++count;
 
 //                    utils::trace(utils::log_debug,"- %s [%d/%d]",track_url.c_str(),parentid,objid);
 
-                    add_media(objid,parentid,t->type,track_handler,t->id,(u_int64_t)-1,track_name,track_url,track_logo,std::string());
+                    add_media(objid,parentid,t->type,track_handler,t->id,(u_int64_t)-1,track_name,track_url,track_logo,std::string(),track_extra.serialize());
                 }
 
                 track_name.clear();
@@ -382,6 +396,7 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
                 track_url.clear();
                 track_type.clear();
                 track_handler.clear();
+                track_extra = serialization::data();
             }
         }
 
@@ -461,7 +476,7 @@ int utils::scan_directory(const std::string& path,int parentid,int& objid)
                                     utils::md5(de.fullname,unique_id);
 
                                 add_media(objid,parentid,t->type,std::string(),t->id,length,charset::to_utf8(std::string(de.name(),p-de.name())),
-                                        de.fullname,std::string(),unique_id);
+                                        de.fullname,std::string(),unique_id,std::string());
                             }
                         }
                     }
@@ -522,18 +537,6 @@ int utils::update_media_meta(void)
 
     return 0;
 #endif /* NO_SQLITE */
-}
-
-bool utils::__is_number(const std::string& s,int len)
-{
-    if(len!=-1 && s.length()!=len)
-        return false;
-
-    for(const char* p=s.c_str();*p;p++)
-        if(!isdigit(*p))
-            return false;
-
-    return true;
 }
 
 bool utils::get_meta_data_by_filename(const std::string& filename,meta_data& meta)

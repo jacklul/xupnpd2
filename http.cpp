@@ -17,6 +17,7 @@
 #include "ssdp.h"
 #include "scripting.h"
 #include "live.h"
+#include "serialization.h"
 
 #ifndef _WIN32
 #include <sys/types.h>
@@ -623,7 +624,7 @@ bool http::get_range(std::map<std::string,std::string>& hdrs,range_t& range,stru
     return true;
 }
 
-bool http::req::headers(int code,bool extra,u_int64_t content_length,const std::string& content_type)
+bool http::req::headers(int code,bool extra,u_int64_t content_length,const std::string& content_type,const std::string& location)
 {
     const char* status="";
 
@@ -640,9 +641,13 @@ bool http::req::headers(int code,bool extra,u_int64_t content_length,const std::
         "HTTP/1.1 %d %s\r\n"
         "Server: %s\r\n"
         "Date: %s\r\n"
-        "Connection: %s\r\n"
-        "EXT:\r\n",
+        "Connection: %s\r\n",
         code,status,cfg::ssdp_server.c_str(),utils::sys_time(0).c_str(),is_keep_alive?"Keep-Alive":"close");
+
+    if(!location.empty())
+        out->printf("Location: %s\r\n", location.c_str());
+    else
+        out->printf("EXT:\r\n");
 
     if(is_keep_alive)
         out->printf("Keep-Alive: timeout=%u, max=%d\r\n",cfg::http_keep_alive_timeout,cfg::http_keep_alive_max);
@@ -655,7 +660,6 @@ bool http::req::headers(int code,bool extra,u_int64_t content_length,const std::
 
     if(!extra)
         out->printf("\r\n");
-
 
     if(utils::is_trace_needed(utils::log_http))
     {
@@ -837,7 +841,8 @@ bool http::req::main(void)
         if(n==std::string::npos)
             return headers(403,false);
 
-        std::string objid=url.substr(8,n-8);
+        std::string objid = url.substr(8,n-8);
+        std::string ext = url.substr(n + 1);
 
         if(objid.empty() || objid.length()>32)
             return headers(403,false);
@@ -877,10 +882,17 @@ bool http::req::main(void)
         if(cfg::upnp_hdr_content_disp)
             extras["Content-Disposition"]=utils::format("attachment; filename=\"%s.%s\"",objid.c_str(),t->name);
 
-        if(obj.handler.empty())
+        if (obj.handler.empty()) {
             return sendfile(obj.url,extras);
-        else
-            return live::sendurl(this,obj.url,obj.handler,t->mime,extras);
+        } else {
+            serialization::data extra = serialization::deserialize(obj.extra.c_str());
+
+            if (!strncmp(ext.c_str(), "m3u", 3)) {
+                return live::sendplaylist(this, ext, (extra.get("raw") == "true" ? obj.url : obj.objid), t->name);
+            }
+
+            return live::sendurl(this, obj.url, obj.handler, t->mime, extras, extra.get("raw"));
+        }
     }else if(!strncmp(url.c_str(),"/ev/",4))
     {
         if(method=="SUBSCRIBE")

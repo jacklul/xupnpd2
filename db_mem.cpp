@@ -131,7 +131,7 @@ bool db_mem::add_container(int contid,int parentid,int childs_num,const std::str
 }
 
 bool db_mem::add_media(int objid,int parentid,int objtype,const std::string& handler,int mimecode,u_int64_t length,const std::string& name,
-    const std::string& url,const std::string& logo,const std::string& uuid)
+    const std::string& url,const std::string& logo,const std::string& uuid, const std::string& extra)
 {
     object_t& o=media_by_objid[objid];
 
@@ -145,6 +145,7 @@ bool db_mem::add_media(int objid,int parentid,int objtype,const std::string& han
     o.name=name;
     o.url=url;
     o.logo=logo;
+    o.extra=extra;
 
     __attach_child(o,parentid);
 
@@ -285,6 +286,8 @@ bool db_mem::rowset_t::fetch(std::map<std::string,std::string>& row)
     row["name"]=o->name;
     row["url"]=o->url;
     row["logo"]=o->logo;
+    row["uuid"]=o->uuid;
+    row["extra"]=o->extra;
 
     return true;
 }

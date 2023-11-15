@@ -11,7 +11,7 @@
 
 namespace db_sqlite
 {
-    static const char __fields[]="objid,parentid,objtype,items,handler,mimecode,length,name,url,logo,uuid";
+    static const char __fields[]="objid,parentid,objtype,items,handler,mimecode,length,name,url,logo,uuid,extra";
 
     void __fill_fields(db_sqlite::stmt& s,object_t& o)
     {
@@ -26,6 +26,7 @@ namespace db_sqlite
         s.text(8,o.url);
         s.text(9,o.logo);
         s.text(10,o.uuid);
+        s.text(11,o.extra);
 
         o._is_empty=false;
     }
@@ -54,7 +55,8 @@ bool db_sqlite::init(void)
         "name VARCHAR,"
         "url VARCHAR,"
         "logo VARCHAR,"
-        "uuid VARCHAR"
+        "uuid VARCHAR,"
+        "extra VARCHAR"
         ");"
         "CREATE INDEX IF NOT EXISTS MEDIA_PARENT ON MEDIA(parentid);"
         "CREATE INDEX IF NOT EXISTS MEDIA_NAME ON MEDIA(name);"
@@ -302,13 +304,13 @@ bool db_sqlite::search_objects(const std::string& from,const std::string& to,int
 }
 
 bool db_sqlite::add_media(int objid,int parentid,int objtype,const std::string& handler,int mimecode,u_int64_t length,const std::string& name,
-    const std::string& url,const std::string& logo,const std::string& uuid)
+    const std::string& url,const std::string& logo,const std::string& uuid,const std::string& extra)
 {
     db_sqlite::stmt stmt;
 
     if(stmt.prepare(
-        "INSERT INTO MEDIA(objid,parentid,objtype,handler,mimecode,length,name,url,logo,uuid) "
-        "VALUES(%d,%d,%d,?,%d,?,?,?,?,?)",
+        "INSERT INTO MEDIA(objid,parentid,objtype,handler,mimecode,length,name,url,logo,uuid,extra) "
+        "VALUES(%d,%d,%d,?,%d,?,?,?,?,?,?)",
         objid,parentid,objtype,mimecode) &&
             (handler.empty()?stmt.bind_null(1):stmt.bind(1,handler)) &&
             (length==(u_int64_t)-1?stmt.bind_null(2):stmt.bind_int64(2,length)) &&
@@ -316,6 +318,7 @@ bool db_sqlite::add_media(int objid,int parentid,int objtype,const std::string& 
             stmt.bind(4,url) &&
             (logo.empty()?stmt.bind_null(5):stmt.bind(5,logo)) &&
             (uuid.empty()?stmt.bind_null(6):stmt.bind(6,uuid)) &&
+            (extra.empty()?stmt.bind_null(7):stmt.bind(7,extra)) &&
             stmt.exec())
                 return true;
 

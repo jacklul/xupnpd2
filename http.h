@@ -97,7 +97,7 @@ namespace http
 
         stream* out;
 
-        bool headers(int code,bool extra,u_int64_t content_length=0,const std::string& content_type=std::string());
+        bool headers(int code,bool extra,u_int64_t content_length=0,const std::string& content_type=std::string(),const std::string& location=std::string());
 
         bool sendfile(const std::string& filename,const std::map<std::string,std::string>& extras=std::map<std::string,std::string>());
 
