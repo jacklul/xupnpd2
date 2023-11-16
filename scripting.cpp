@@ -332,7 +332,7 @@ int scripting::lua_browse(lua_State* L)
                             std::string url_translator = row["handler"].substr(at_pos + 1, slash_pos - at_pos - 1);
 
                             if (!url_translator.empty()) {
-                                real_url = luas::translate_url(url_translator, row["url"]);
+                                real_url = luas::translate_url(url_translator, row["url"], std::string());
 
                                 if (!real_url.empty())
                                     row["url"] = real_url;

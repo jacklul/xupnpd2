@@ -387,7 +387,7 @@ bool soap::serialize_media(const db::object_t& row,std::string& ss,const std::st
                 std::string url_translator = row.handler.substr(at_pos + 1, slash_pos - at_pos - 1);
 
                 if (!url_translator.empty()) {
-                    real_url = luas::translate_url(url_translator, row.url);
+                    real_url = luas::translate_url(url_translator, row.url, std::string());
 
                     if (!real_url.empty())
                         url = real_url;
