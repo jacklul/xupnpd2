@@ -61,7 +61,7 @@ namespace live
 
     bool sendurl(http::req* req,const std::string& url,const std::string& handler,const char* mime,std::map<std::string,std::string>& extras,const std::string& raw);
 
-    bool sendredirect(http::req* req, const std::string& url);
+    bool sendredirect(http::req* req, const std::string& url, const std::string& content_type);
 
     bool sendplaylist(http::req* req, const std::string& type, const std::string& target, const std::string& target_ext);
 

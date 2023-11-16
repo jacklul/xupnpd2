@@ -66,8 +66,9 @@ namespace cfg
     extern std::string  upnp_http_type;
     extern std::string  upnp_logo_profile;
     extern bool         upnp_hdr_content_disp;
-    extern bool         upnp_raw_urls;
-    extern std::string  upnp_raw_urls_exclude;
+    extern bool         raw_urls;
+    extern std::string  raw_urls_exclude;
+    extern bool         raw_urls_soap;
     extern int          log_level;
     extern bool         disable_dlna_extras;
     extern std::string  db_file;
@@ -154,6 +155,8 @@ namespace utils
     /*std::string __to_lowercase(const std::string& str);
 
     void __to_lowercase(char buf[], int size);*/
+
+    void translate_url(std::string* url, const std::string& handler);
 }
 
 #endif

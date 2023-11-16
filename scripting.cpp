@@ -17,6 +17,7 @@ extern "C"
 #include "luacompat.h"
 #include <list>
 #include <ctype.h>
+#include <cstring>
 #include "db.h"
 #include "scan.h"
 #include "serialization.h"
@@ -52,6 +53,7 @@ namespace scripting
     int lua_scan_for_media(lua_State* L);
     int lua_browse(lua_State* L);
     int lua_parent(lua_State* L);
+    int lua_fetch(lua_State* L);
 }
 
 
@@ -105,6 +107,7 @@ bool scripting::main(http::req& req,const std::string& filename)
     lua_register(st,"scan_for_media",lua_scan_for_media);
     lua_register(st,"browse",lua_browse);
     lua_register(st,"parent",lua_parent);
+    lua_register(st,"fetch",lua_fetch);
 
     for(std::map<std::string,std::string>::const_iterator it=req.hdrs.begin();it!=req.hdrs.end();++it)
     {
@@ -308,43 +311,11 @@ int scripting::lua_browse(lua_State* L)
             {
                 lua_newtable(L);
 
-                {
-                    const std::string n = "use_raw_url";
-                    bool v;
-
-                    serialization::data extra = serialization::deserialize(row["extra"]);
-
-                    if (extra.get("raw") != "")
-                        v = extra.get("raw") == "true" ? true : false;
-                    else
-                        v = (cfg::upnp_raw_urls && (cfg::upnp_raw_urls_exclude.empty() || cfg::upnp_raw_urls_exclude.find(row["handler"]) == std::string::npos));
-
-                    lua_pushlstring(L,n.c_str(),n.length());
-                    lua_pushboolean(L,v);
-                    lua_rawset(L,-3);
-
-                    if (v) {
-                        std::string real_url(row["url"]);
-                        size_t at_pos = row["handler"].find('@');
-                        size_t slash_pos = row["handler"].find('/', at_pos);
-
-                        if (at_pos != std::string::npos && slash_pos != std::string::npos) {
-                            std::string url_translator = row["handler"].substr(at_pos + 1, slash_pos - at_pos - 1);
-
-                            if (!url_translator.empty()) {
-                                real_url = luas::translate_url(url_translator, row["url"], std::string());
-
-                                if (!real_url.empty())
-                                    row["url"] = real_url;
-                            }
-                        }
-                    }
-                }
+                scripting::__handle_raw_urls(L, &row["handler"], &row["extra"], &row["url"]);
 
                 for(std::map<std::string,std::string>::const_iterator it=row.begin();it!=row.end();++it)
                 {
                     const std::string& n=it->first;
-
                     const std::string& v=it->second;
 
                     lua_pushlstring(L,n.c_str(),n.length());
@@ -368,6 +339,81 @@ int scripting::lua_parent(lua_State* L)
         return 0;
 
     lua_pushstring(L, obj.parentid.c_str());
+
+    return 1;
+}
+
+void scripting::__handle_raw_urls(lua_State* L, const std::string* handler, const std::string* objextra, std::string* url)
+{
+    const std::string n = "use_raw_url";
+    bool v;
+
+    serialization::data extra = serialization::deserialize(*objextra);
+
+    if (extra.get("raw") != "")
+        v = extra.get("raw") == "true" ? true : false;
+    else
+        v = (cfg::raw_urls && (cfg::raw_urls_exclude.empty() || cfg::raw_urls_exclude.find(*handler) == std::string::npos));
+
+    lua_pushlstring(L,n.c_str(),n.length());
+    lua_pushboolean(L,v);
+    lua_rawset(L,-3);
+
+    if (v) {
+        utils::translate_url(url, *handler);
+    }
+}
+
+void scripting::__insert_fields(lua_State* L, const db::object_t* obj)
+{
+    const char* fields[] = {"objid", "parentid", "objtype", "items", "handler", "mimecode", "length", "name", "url", "logo", "uuid", "extra"};
+
+    size_t num = sizeof(fields) / sizeof(fields[0]);
+
+    for (size_t i = 0; i < num; ++i)
+    {
+        lua_pushstring(L, fields[i]);
+
+        if (strcmp(fields[i], "objid") == 0)
+            lua_pushstring(L, obj->objid.c_str());
+        else if (strcmp(fields[i], "parentid") == 0)
+            lua_pushstring(L, obj->parentid.c_str());
+        else if (strcmp(fields[i], "objtype") == 0)
+            lua_pushinteger(L, obj->objtype);
+        else if (strcmp(fields[i], "items") == 0)
+            lua_pushstring(L, obj->items.c_str());
+        else if (strcmp(fields[i], "handler") == 0)
+            lua_pushstring(L, obj->handler.c_str());
+        else if (strcmp(fields[i], "mimecode") == 0)
+            lua_pushinteger(L, obj->mimecode);
+        else if (strcmp(fields[i], "length") == 0)
+            lua_pushstring(L, obj->length.c_str());
+        else if (strcmp(fields[i], "name") == 0)
+            lua_pushstring(L, obj->name.c_str());
+        else if (strcmp(fields[i], "url") == 0)
+            lua_pushstring(L, obj->url.c_str());
+        else if (strcmp(fields[i], "logo") == 0)
+            lua_pushstring(L, obj->logo.c_str());
+        else if (strcmp(fields[i], "uuid") == 0)
+            lua_pushstring(L, obj->uuid.c_str());
+        else if (strcmp(fields[i], "extra") == 0)
+            lua_pushstring(L, obj->extra.c_str());
+
+        lua_rawset(L, -3);
+    }
+}
+
+int scripting::lua_fetch(lua_State* L)
+{
+    db::object_t obj;
+
+    if(!db::find_object_by_id(luaL_checkstring(L,1), obj))
+        return 0;
+
+    lua_newtable(L);
+
+    scripting::__handle_raw_urls(L, &obj.handler, &obj.extra, &obj.url);
+    scripting::__insert_fields(L, &obj);
 
     return 1;
 }

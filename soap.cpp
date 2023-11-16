@@ -361,16 +361,26 @@ bool soap::serialize_media(const db::object_t& row,std::string& ss,const std::st
 
         bool raw_urls = false;
 
-        if (!row.handler.empty()) {
-            serialization::data extra = serialization::deserialize(row.extra);
+        if (cfg::raw_urls_soap) {
+            if (!row.handler.empty()) {
+                serialization::data extra = serialization::deserialize(row.extra);
 
-            const std::string extra_raw = extra.get("raw");
+                const std::string extra_raw = extra.get("raw");
 
-            if (extra_raw != "")
-                raw_urls = extra_raw == "true" ? true : false;
-            else
-                raw_urls = (cfg::upnp_raw_urls && (cfg::upnp_raw_urls_exclude.empty() || cfg::upnp_raw_urls_exclude.find(row.handler) == std::string::npos));
+                if (extra_raw != "")
+                    raw_urls = extra_raw == "true" ? true : false;
+                else
+                    raw_urls = (cfg::raw_urls && (cfg::raw_urls_exclude.empty() || cfg::raw_urls_exclude.find(row.handler) == std::string::npos));
+            }
         }
+
+        // Replace mime for streams with playlist mime (to correctly handle playlist redirect)
+        /*if ((cfg::raw_urls || raw_urls) && mimecode >= 34 && mimecode <= 35) {
+            t = mime::get_by_id(11);
+
+            if (!t || !t->upnp_proto)
+                return false;
+        }*/
 
         std::string url;
 
@@ -379,20 +389,7 @@ bool soap::serialize_media(const db::object_t& row,std::string& ss,const std::st
         } else {
             url = row.url;
 
-            std::string real_url(row.url);
-            size_t at_pos = row.handler.find('@');
-            size_t slash_pos = row.handler.find('/', at_pos);
-
-            if (at_pos != std::string::npos && slash_pos != std::string::npos) {
-                std::string url_translator = row.handler.substr(at_pos + 1, slash_pos - at_pos - 1);
-
-                if (!url_translator.empty()) {
-                    real_url = luas::translate_url(url_translator, row.url, std::string());
-
-                    if (!real_url.empty())
-                        url = real_url;
-                }
-            }
+            utils::translate_url(&url, row.handler);
         }
 
         char buf[1024];

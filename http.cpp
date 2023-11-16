@@ -18,6 +18,7 @@
 #include "scripting.h"
 #include "live.h"
 #include "serialization.h"
+#include "plugin_lua.h"
 
 #ifndef _WIN32
 #include <sys/types.h>
@@ -186,20 +187,27 @@ bool http::stream::__write(const char* p,int len)
 
 bool http::stream::printf(const char* fmt,...)
 {
-    char buf[512];
-
     va_list ap;
 
-    va_start(ap,fmt);
-
-    int n=vsnprintf(buf,sizeof(buf),fmt,ap);
-
+    va_start(ap, fmt);
+    int length = vsnprintf(nullptr, 0, fmt, ap);
     va_end(ap);
 
-    if(n==-1 || n>=sizeof(buf))
+    if (length < 0) {
         return false;
+    }
 
-    return write(buf,n);
+    char* buf = new char[length + 1];
+
+    va_start(ap, fmt);
+    vsnprintf(buf, length + 1, fmt, ap);
+    va_end(ap);
+
+    bool result = write(buf, length);
+
+    delete[] buf;
+
+    return result;
 }
 
 bool http::stream::flush(void)
@@ -842,7 +850,6 @@ bool http::req::main(void)
             return headers(403,false);
 
         std::string objid = url.substr(8,n-8);
-        std::string ext = url.substr(n + 1);
 
         if(objid.empty() || objid.length()>32)
             return headers(403,false);
@@ -885,10 +892,20 @@ bool http::req::main(void)
         if (obj.handler.empty()) {
             return sendfile(obj.url,extras);
         } else {
+            std::string ext = url.substr(n + 1);
             serialization::data extra = serialization::deserialize(obj.extra.c_str());
 
             if (!strncmp(ext.c_str(), "m3u", 3)) {
-                return live::sendplaylist(this, ext, (extra.get("raw") == "true" ? obj.url : obj.objid), t->name);
+                utils::translate_url(&obj.url, obj.handler);
+
+                bool raw_url = cfg::raw_urls || extra.get("raw") == "true";
+
+                if (raw_url) {
+                    if (obj.mimecode >= 34 && obj.mimecode <= 35)
+                        return live::sendredirect(this, obj.url, (mime::get_by_id(11)->mime));
+                    else
+                        return live::sendplaylist(this, ext, obj.url, t->name);
+                }
             }
 
             return live::sendurl(this, obj.url, obj.handler, t->mime, extras, extra.get("raw"));

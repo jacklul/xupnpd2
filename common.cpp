@@ -42,6 +42,7 @@
 #include "http.h"
 #include "charset.h"
 #include "scripting.h"
+#include "plugin_lua.h"
 #include "live.h"
 #include "scan.h"
 #include "md5.h"
@@ -92,8 +93,9 @@ namespace cfg
     std::string upnp_http_type;
     std::string upnp_logo_profile;
     bool upnp_hdr_content_disp=false;
-    bool upnp_raw_urls=false;
-    std::string upnp_raw_urls_exclude;
+    bool raw_urls=false;
+    std::string raw_urls_exclude;
+    bool raw_urls_soap=false;
     int log_level=utils::log_info;
     bool disable_dlna_extras=false;
     std::string db_file;
@@ -158,8 +160,9 @@ namespace cfg
         { "upnp_http_type",             tstr,   1,      6,      &upnp_http_type                 },
         { "upnp_logo_profile",          tstr,   1,      256,    &upnp_logo_profile              },
         { "upnp_hdr_content_disp",      tbol,   0,      0,      &upnp_hdr_content_disp          },
-        { "upnp_raw_urls",              tbol,   0,      0,      &upnp_raw_urls                  },
-        { "upnp_raw_urls_exclude",      tstr,   0,      256,    &upnp_raw_urls_exclude          },
+        { "raw_urls",                   tbol,   0,      0,      &raw_urls                       },
+        { "raw_urls_exclude",           tstr,   0,      256,    &raw_urls_exclude               },
+        { "raw_urls_soap",              tbol,   0,      0,      &raw_urls_soap                  },
         { "log_level",                  tint,   -8,     8,      &log_level                      },
         { "disable_dlna_extras",        tbol,   0,      0,      &disable_dlna_extras            },
         { "db_file",                    tstr,   1,      512,    &db_file                        },
@@ -1010,3 +1013,20 @@ void utils::__to_lowercase(char buf[], int size) {
         buf[i] = tolower((unsigned char)buf[i]);
     }
 }*/
+
+void utils::translate_url(std::string* url, const std::string& handler)
+{
+    size_t at_pos = handler.find('@');
+    size_t slash_pos = handler.find('/', at_pos);
+
+    if (at_pos != std::string::npos && slash_pos != std::string::npos) {
+        std::string url_translator = handler.substr(at_pos + 1, slash_pos - at_pos - 1);
+
+        if (!url_translator.empty()) {
+            std::string real_url = luas::translate_url(url_translator, *url, std::string());
+
+            if (!real_url.empty())
+                *url = real_url;
+        }
+    }
+}

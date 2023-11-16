@@ -434,12 +434,14 @@ bool live::sendurl(http::req* req,const std::string& url,const std::string& hand
 
     if (raw != "")
         redirect_to_raw_url = raw == "true" ? true : false;
-    else if (cfg::upnp_raw_urls) {
-        if (!cfg::upnp_raw_urls_exclude.empty()) {
+    else if (cfg::raw_urls) {
+        redirect_to_raw_url = true;
+
+        if (!cfg::raw_urls_exclude.empty()) {
             for(std::list<handler_desc_t>::const_iterator it = handlers.begin(); it != handlers.end(); ++it) {
                 const std::string& handler = (*it).handler;
 
-                if (cfg::upnp_raw_urls_exclude.find(handler) != std::string::npos) {
+                if (cfg::raw_urls_exclude.find(handler) != std::string::npos) {
                     redirect_to_raw_url = false;
                     break;
                 }
@@ -448,7 +450,7 @@ bool live::sendurl(http::req* req,const std::string& url,const std::string& hand
     }
 
     if (redirect_to_raw_url) {
-        return live::sendredirect(req, real_url);
+        return live::sendredirect(req, real_url, std::string());
     }
 
     for(std::list<handler_desc_t>::const_iterator it=handlers.begin();it!=handlers.end();++it)
@@ -528,10 +530,10 @@ bool live::sendurl(http::req* req,const std::string& url,const std::string& hand
     return false;
 }
 
-bool live::sendredirect(http::req* req, const std::string& url)
+bool live::sendredirect(http::req* req, const std::string& url, const std::string& content_type)
 {
     req->is_keep_alive = false;
-    req->headers(302, false, 0, std::string(), url);
+    req->headers(302, false, 0, content_type, url);
     utils::trace(utils::log_core, "redirecting request to '%s'", url.c_str());
     return true;
 }
@@ -553,9 +555,9 @@ bool live::sendplaylist(http::req* req, const std::string& type, const std::stri
     std::string contents;
 
     if (utils::__is_number(target, target.length())) { // provided objid
-        contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:-1\n%s.%s", target.c_str(), (!target_ext.empty() ? target_ext : cfg::upnp_live_type).c_str());
+        contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:86400\n#EXT-X-MEDIA-SEQUENCE:1\n#EXTINF:86400\n%s.%s\n", target.c_str(), (!target_ext.empty() ? target_ext : cfg::upnp_live_type).c_str());
     } else { // provided url
-        contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-STREAM-INF\n%s", target.c_str());
+        contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-STREAM-INF:PROGRAM-ID=1\n%s\n", target.c_str());
     }
 
     req->headers(200, false, contents.length(), pmime->mime);
