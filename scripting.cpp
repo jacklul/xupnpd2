@@ -5,6 +5,7 @@
  */
 
 #include "scripting.h"
+#include "plugin_lua.h"
 
 extern "C"
 {
@@ -307,17 +308,6 @@ int scripting::lua_browse(lua_State* L)
             {
                 lua_newtable(L);
 
-                for(std::map<std::string,std::string>::const_iterator it=row.begin();it!=row.end();++it)
-                {
-                    const std::string& n=it->first;
-
-                    const std::string& v=it->second;
-
-                    lua_pushlstring(L,n.c_str(),n.length());
-                    lua_pushlstring(L,v.c_str(),v.length());
-                    lua_rawset(L,-3);
-                }
-
                 {
                     const std::string n = "use_raw_url";
                     bool v;
@@ -331,6 +321,34 @@ int scripting::lua_browse(lua_State* L)
 
                     lua_pushlstring(L,n.c_str(),n.length());
                     lua_pushboolean(L,v);
+                    lua_rawset(L,-3);
+
+                    if (v) {
+                        std::string real_url(row["url"]);
+                        size_t at_pos = row["handler"].find('@');
+                        size_t slash_pos = row["handler"].find('/', at_pos);
+
+                        if (at_pos != std::string::npos && slash_pos != std::string::npos) {
+                            std::string url_translator = row["handler"].substr(at_pos + 1, slash_pos - at_pos - 1);
+
+                            if (!url_translator.empty()) {
+                                real_url = luas::translate_url(url_translator, row["url"]);
+
+                                if (!real_url.empty())
+                                    row["url"] = real_url;
+                            }
+                        }
+                    }
+                }
+
+                for(std::map<std::string,std::string>::const_iterator it=row.begin();it!=row.end();++it)
+                {
+                    const std::string& n=it->first;
+
+                    const std::string& v=it->second;
+
+                    lua_pushlstring(L,n.c_str(),n.length());
+                    lua_pushlstring(L,v.c_str(),v.length());
                     lua_rawset(L,-3);
                 }
 

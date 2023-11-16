@@ -374,10 +374,26 @@ bool soap::serialize_media(const db::object_t& row,std::string& ss,const std::st
 
         std::string url;
 
-        if (!raw_urls)
+        if (!raw_urls) {
             url = (cfg::www_location.c_str()) + std::string("/stream/") + (row.uuid.empty() ? row.objid : row.uuid).c_str() + "." + (t->name);
-        else
+        } else {
             url = row.url;
+
+            std::string real_url(row.url);
+            size_t at_pos = row.handler.find('@');
+            size_t slash_pos = row.handler.find('/', at_pos);
+
+            if (at_pos != std::string::npos && slash_pos != std::string::npos) {
+                std::string url_translator = row.handler.substr(at_pos + 1, slash_pos - at_pos - 1);
+
+                if (!url_translator.empty()) {
+                    real_url = luas::translate_url(url_translator, row.url);
+
+                    if (!real_url.empty())
+                        url = real_url;
+                }
+            }
+        }
 
         char buf[1024];
 
