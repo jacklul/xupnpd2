@@ -50,6 +50,7 @@ namespace scripting
     int lua_httpreq_data_length(lua_State* L);
     int lua_scan_for_media(lua_State* L);
     int lua_browse(lua_State* L);
+    int lua_parent(lua_State* L);
 }
 
 
@@ -102,6 +103,7 @@ bool scripting::main(http::req& req,const std::string& filename)
     lua_register(st,"print",lua_print);
     lua_register(st,"scan_for_media",lua_scan_for_media);
     lua_register(st,"browse",lua_browse);
+    lua_register(st,"parent",lua_parent);
 
     for(std::map<std::string,std::string>::const_iterator it=req.hdrs.begin();it!=req.hdrs.end();++it)
     {
@@ -338,4 +340,16 @@ int scripting::lua_browse(lua_State* L)
     }
 
     return rc;
+}
+
+int scripting::lua_parent(lua_State* L)
+{
+    db::object_t obj;
+
+    if(!db::find_object_by_id(luaL_checkstring(L,1), obj))
+        return 0;
+
+    lua_pushstring(L, obj.parentid.c_str());
+
+    return 1;
 }

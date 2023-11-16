@@ -55,6 +55,11 @@ end
 
 http:out('<br>\n')
 
+parent = parent(objid)
+if parent ~= nil and parent ~= "-1" then
+    http:out(string.format('<a href="%s?id=%s">parent</a> | ',REQUEST_URI,parent))
+end
+
 http:out(string.format('<a href="%s?id=0">top</a> | <a href="/index.html">home</a>\n',REQUEST_URI))
 
 http:out('</body></html>\n')
