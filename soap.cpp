@@ -346,7 +346,7 @@ bool soap::serialize_media(const db::object_t& row,std::string& ss,const std::st
         const std::string& _logo=row.logo;
 
         if(!_logo.empty()) {
-            if(!strncmp(_logo.c_str(),"http",4))
+            if(!strncasecmp(_logo.c_str(),"http",4))
                 utils::format(logo,"<upnp:albumArtURI dlna:profileID=\"%s\">%s</upnp:albumArtURI>",cfg::upnp_logo_profile.c_str(),_logo.c_str());
             else
                 utils::format(logo,"<upnp:albumArtURI dlna:profileID=\"%s\">%s/%s</upnp:albumArtURI>",cfg::upnp_logo_profile.c_str(),cfg::www_location.c_str(),_logo.c_str());

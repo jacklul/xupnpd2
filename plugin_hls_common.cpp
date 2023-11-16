@@ -364,14 +364,14 @@ bool hls::stream::_open(const std::string& url,const std::string& range,const st
     len=0;
 
 #ifndef NO_SSL
-    if(!strncmp(p,http_tag,sizeof(http_tag)-1))
+    if(!strncasecmp(p,http_tag,sizeof(http_tag)-1))
         p+=sizeof(http_tag)-1;
-    else if(!strncmp(p,https_tag,sizeof(https_tag)-1))
+    else if(!strncasecmp(p,https_tag,sizeof(https_tag)-1))
         p+=sizeof(https_tag)-1;
     else
         return false;
 #else
-    if(strncmp(p,http_tag,sizeof(http_tag)-1))
+    if(strncasecmp(p,http_tag,sizeof(http_tag)-1))
         return false;
 
     p+=sizeof(http_tag)-1;
@@ -398,7 +398,7 @@ bool hls::stream::_open(const std::string& url,const std::string& range,const st
     else
 #ifndef NO_SSL
     {
-        if(!strncmp(url.c_str(),https_tag,sizeof(https_tag)-1))
+        if(!strncasecmp(url.c_str(),https_tag,sizeof(https_tag)-1))
             port=443;
         else
             port=80;
@@ -410,7 +410,7 @@ bool hls::stream::_open(const std::string& url,const std::string& range,const st
         resource=url;
 
 #ifndef NO_SSL
-    if(!strncmp(url.c_str(),https_tag,sizeof(https_tag)-1))
+    if(!strncasecmp(url.c_str(),https_tag,sizeof(https_tag)-1))
     {
         if (!(ssl_ctx = ssl::create_context()))
             return false;
@@ -593,11 +593,11 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
 
         if(!idx)
         {
-            if(strcmp(buf,"#EXTM3U"))
+            if(strcasecmp(buf,"#EXTM3U"))
                 return 0;
         }else
         {
-            if(!strncmp(buf,extinf_tag,sizeof(extinf_tag)-1))
+            if(!strncasecmp(buf,extinf_tag,sizeof(extinf_tag)-1))
             {
                 st=1;
 
@@ -610,9 +610,9 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
 
                 track_length=str2usec(p);
 
-            }if(!strncmp(buf,streaminf_tag,sizeof(streaminf_tag)-1))
+            }else if(!strncasecmp(buf,streaminf_tag,sizeof(streaminf_tag)-1)) {
                 st=2;
-            else if(!strncmp(buf,seq_tag,sizeof(seq_tag)-1))
+            }else if(!strncasecmp(buf,seq_tag,sizeof(seq_tag)-1))
             {
                 char* endptr=NULL;
 
@@ -620,11 +620,11 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
 
                 if(!*endptr)
                     base_seq=l;
-            }else if(!strncmp(buf,duration_tag,sizeof(duration_tag)-1))
+            }else if(!strncasecmp(buf,duration_tag,sizeof(duration_tag)-1))
             {
                 chunks.set_target_duration(str2usec(buf+sizeof(duration_tag)-1));
 #ifndef NO_SSL
-            }else if (!strncmp(buf, key_tag, sizeof(key_tag) - 1))
+            }else if (!strncasecmp(buf, key_tag, sizeof(key_tag) - 1))
             {
                 char* p = buf + sizeof(key_tag) - 1;
 
@@ -645,7 +645,7 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
                     size_t equal_pos = token.find('=');
 
                     if (equal_pos != std::string::npos) {
-                        std::string key = token.substr(0, equal_pos);
+                        std::string key = utils::__to_uppercase(token.substr(0, equal_pos));
                         std::string value = token.substr(equal_pos + 1);
 
                         if (!value.empty() && (value.front() == '"' || value.front() == '\'') && value.front() == value.back()) {
@@ -653,11 +653,13 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
                         }
 
                         if (key == "METHOD") {
-                            key_method = value;
+                            key_method = utils::__to_uppercase(value);
                         } else if (key == "URI") {
-                            if (!strncmp(value.c_str(), http_tag, sizeof(http_tag) - 1) || !strncmp(value.c_str(), https_tag, sizeof(https_tag) - 1))
+                            if (!strncasecmp(value.c_str(), "http", 4)) {
                                 key_url = value;
-                            else
+                            } else if (!strncmp(value.c_str(), "/", 1)) {
+                                key_url = utils::extract_root_url(base_url) + value;
+                            } else
                                 key_url = base_url + value;
                         } else if (key == "IV") {
                             key_iv = value;
@@ -683,10 +685,15 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
                         {
                             int n=strlen(buf);
 
-                            if(!strncmp(buf,http_tag,sizeof(http_tag)-1) || !strncmp(buf,https_tag,sizeof(https_tag)-1))
+                            if (!strncasecmp(buf, "http", 4)) {
                                 url.assign(buf,n);
-                            else
-                                { url=base_url; url.append(buf,n); }
+                            } else if (!strncmp(buf, "/", 1)) {
+                                url = utils::extract_root_url(base_url);
+                                url.append(buf, n);
+                            } else {
+                                url = base_url;
+                                url.append(buf, n);
+                            }
                         }
 
                         chunks.push_back(cur_id,track_length,url,key_method,key_url,key_iv);
@@ -717,7 +724,7 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
     {
         stream s(user_agent);
 
-        if(strncmp(stream_url.c_str(),http_tag,sizeof(http_tag)-1) && strncmp(stream_url.c_str(),https_tag,sizeof(https_tag)-1))
+        if (strncasecmp(stream_url.c_str(), "http", 4))
             stream_url=base_url+stream_url;
 
         if(s.open(stream_url))
@@ -841,4 +848,22 @@ int http::fetch(const std::string& url,std::string& dst,const std::string& post_
         return -3;
 
     return 0;
+}
+
+std::string utils::extract_root_url(const std::string& url)
+{
+    size_t start_pos = url.find("//");
+
+    if (start_pos != std::string::npos) {
+        size_t domain_pos = start_pos + 2;
+        size_t path_pos = url.find('/', domain_pos);
+
+        if (path_pos != std::string::npos) {
+            return url.substr(0, path_pos);
+        } else {
+            return url;
+        }
+    }
+
+    return "";
 }

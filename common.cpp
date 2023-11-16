@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <list>
+#include <algorithm>
 #include "mime.h"
 #include "version.h"
 #include "db.h"
@@ -983,3 +984,29 @@ bool utils::__is_number(const std::string& s,int len)
 
     return true;
 }
+
+std::string utils::__to_uppercase(const std::string& str)
+{
+    std::string result = str;
+    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return std::toupper(c); });
+    return result;
+}
+
+void utils::__to_uppercase(char buf[], int size)
+{
+    for (int i = 0; i < size; i++) {
+        buf[i] = toupper((unsigned char)buf[i]);
+    }
+}
+
+/*std::string utils::__to_lowercase(const std::string& str) {
+    std::string result = str;
+    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return std::tolower(c); });
+    return result;
+}
+
+void utils::__to_lowercase(char buf[], int size) {
+    for (int i = 0; i < size; i++) {
+        buf[i] = tolower((unsigned char)buf[i]);
+    }
+}*/

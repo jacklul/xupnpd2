@@ -129,9 +129,9 @@ int udprtp::openurl(const std::string& url,int& proto,const std::string& ifaddr)
 
     const char* p=url.c_str();
 
-    if(!strncmp(p,"udp://",6))
+    if(!strncasecmp(p,"udp://",6))
         proto=proto_udp;
-    else if(!strncmp(p,"rtp://",6))
+    else if(!strncasecmp(p,"rtp://",6))
         proto=proto_rtp;
     else
         return -1;

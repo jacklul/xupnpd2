@@ -241,7 +241,7 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
                 if(!strncmp(p,"\xEF\xBB\xBF",3))    // skip BOM
                     p+=3;
 
-                if(strncmp(p,"#EXTM3U",7))
+                if(strncasecmp(p,"#EXTM3U",7))
                     return 0;
 
                 is_first=false;
@@ -257,7 +257,7 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
                 static const char tag[]="EXTINF:";
                 static const char tag_pls[]="EXT-X-M3U:";
 
-                if(!strncmp(p,tag,sizeof(tag)-1))
+                if(!strncasecmp(p,tag,sizeof(tag)-1))
                 {
                     p+=sizeof(tag)-1;
                     while(*p==' ')
@@ -282,7 +282,7 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
 
                         track_name=p2;
                     }
-                }else if(!strncmp(p,tag_pls,sizeof(tag_pls)-1))
+                }else if(!strncasecmp(p,tag_pls,sizeof(tag_pls)-1))
                 {
                     p+=sizeof(tag_pls)-1;
 
@@ -341,13 +341,13 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
 
                 if(track_handler.empty())
                 {
-                    if(!strncmp(track_url.c_str(),"http",4))
+                    if(!strncasecmp(track_url.c_str(),"http",4))
                     {
-                        if(!strncmp(track_type.c_str(),"m3u",3))
+                        if(!strncasecmp(track_type.c_str(),"m3u",3))
                             track_handler="hls";
                         else
                             track_handler="http";
-                    }else if(!strncmp(track_url.c_str(),"udp://",6) || !strncmp(track_url.c_str(),"rtp://",6))
+                    }else if(!strncasecmp(track_url.c_str(),"udp://",6) || !strncasecmp(track_url.c_str(),"rtp://",6))
                         track_handler="udp";
                 }
 
@@ -442,7 +442,7 @@ int utils::scan_directory(const std::string& path,int parentid,int& objid)
 
                     if(p)
                     {
-                        if(!strncmp(p+1,"m3u",3))
+                        if(!strncasecmp(p+1,"m3u",3))
                         {
                             ++objid; ++count;
 

@@ -146,6 +146,14 @@ namespace utils
     bool openlog(void);
 
     bool __is_number(const std::string& s,int len);
+
+    std::string __to_uppercase(const std::string& str);
+
+    void __to_uppercase(char buf[], int size);
+
+    /*std::string __to_lowercase(const std::string& str);
+
+    void __to_lowercase(char buf[], int size);*/
 }
 
 #endif
