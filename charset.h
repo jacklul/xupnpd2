@@ -14,6 +14,8 @@ namespace charset
     bool set(const std::string& cp);
 
     std::string to_utf8(const std::string& s);
+
+    std::string to_utf8_new(const std::string& s);
 }
 
 #endif

@@ -7,6 +7,9 @@
 #include "common.h"
 #include "charset.h"
 #include <string.h>
+#include <iostream>
+#include <locale>
+#include <codecvt>
 
 namespace charset
 {
@@ -154,10 +157,14 @@ namespace charset
         0x002e, 0x002e, 0x002e, 0x002e, 0x002e, 0x002e, 0x002e, 0x002e
     };
 
+#ifndef NO_AUTO_CHARSET
+    const unsigned int* __table = nullptr;
+#else
 #ifndef _WIN32
     const unsigned int* __table=utf8_to_utf8;
 #else
     const unsigned int* __table=win1251_to_utf8;
+#endif
 #endif
 
     bool set(const std::string& cp)
@@ -170,6 +177,8 @@ namespace charset
             __table=win1251_to_utf8;
         else if(!strcasecmp(cp.c_str(),"latin1"))
             __table=latin1_to_utf8;
+        else if(!strcasecmp(cp.c_str(),"auto"))
+            __table=nullptr;
         else
             return false;
 
@@ -178,10 +187,47 @@ namespace charset
 
     std::string to_utf8(const std::string& s)
     {
+        if (__table == NULL) {
+            return to_utf8_new(s);
+        }
+
         std::string ss;
 
-        for(const unsigned char* p=(const unsigned char*)s.c_str();*p;p++)
-            { unsigned int c=__table[*p]; if(c&0xff00) { ss+=(c>>8)&0xff; } ss+=c&0xff; }
+        for (const unsigned char* p = reinterpret_cast<const unsigned char*>(s.c_str()); *p; ++p) {
+            unsigned int c = charset::__table[*p];
+            if (c & 0xff00) {
+                ss += static_cast<char>((c >> 8) & 0xff);
+            }
+            ss += static_cast<char>(c & 0xff);
+        }
+
+        return ss;
+    }
+
+    std::string to_utf8_new(const std::string& s)
+    {
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+        std::wstring wide = converter.from_bytes(s);
+
+        std::string ss;
+
+        for (wchar_t wch : wide) {
+            if (wch <= 0x7F) {
+                ss += static_cast<char>(wch);
+            } else if (wch <= 0x7FF) {
+                ss += static_cast<char>(0xC0 | ((wch >> 6) & 0x1F));
+                ss += static_cast<char>(0x80 | (wch & 0x3F));
+            } else if (wch <= 0xFFFF) {
+                ss += static_cast<char>(0xE0 | ((wch >> 12) & 0x0F));
+                ss += static_cast<char>(0x80 | ((wch >> 6) & 0x3F));
+                ss += static_cast<char>(0x80 | (wch & 0x3F));
+            } else if (wch <= 0x10FFFF) {
+                ss += static_cast<char>(0xF0 | ((wch >> 18) & 0x07));
+                ss += static_cast<char>(0x80 | ((wch >> 12) & 0x3F));
+                ss += static_cast<char>(0x80 | ((wch >> 6) & 0x3F));
+                ss += static_cast<char>(0x80 | (wch & 0x3F));
+            }
+        }
 
         return ss;
     }
