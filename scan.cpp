@@ -263,7 +263,7 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
                     while(*p==' ')
                         p++;
 
-                    char* p2=strchr(p,',');
+                    char* p2=strrchr(p,',');
                     if(p2)
                     {
                         *p2=0; p2++;
