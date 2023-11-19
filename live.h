@@ -9,6 +9,7 @@
 
 #include <string>
 #include "http.h"
+#include "serialization.h"
 
 namespace live
 {
@@ -59,7 +60,7 @@ namespace live
 
     bool init(void);
 
-    bool sendurl(http::req* req,const std::string& url,const std::string& handler,const char* mime,std::map<std::string,std::string>& extras,const std::string& raw);
+    bool sendurl(http::req* req,const std::string& url,const std::string& handler,const char* mime,std::map<std::string,std::string>& extras,const serialization::data& extra_attributes);
 
     bool sendredirect(http::req* req, const std::string& url, const std::string& content_type);
 

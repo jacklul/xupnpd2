@@ -87,6 +87,11 @@ namespace hls
 
     void split_url(const std::string& url,std::string& stream_url,std::string& user_agent,int* stream_id)
     {
+        const char* user_agent_env = getenv("USER_AGENT");
+
+        if (user_agent_env)
+            user_agent = user_agent_env;
+
         std::string::size_type n=url.find_last_of("#");
 
         if(n==std::string::npos)

@@ -893,12 +893,12 @@ bool http::req::main(void)
             return sendfile(obj.url,extras);
         } else {
             std::string ext = url.substr(n + 1);
-            serialization::data extra = serialization::deserialize(obj.extra.c_str());
+            serialization::data extra_attributes = serialization::deserialize(obj.extra);
 
             if (!strncmp(ext.c_str(), "m3u", 3)) {
                 utils::translate_url(&obj.url, obj.handler);
 
-                bool raw_url = cfg::raw_urls || extra.get("raw") == "true";
+                bool raw_url = cfg::raw_urls || extra_attributes.get("raw") == "true";
 
                 if (raw_url) {
                     if (obj.mimecode >= 34 && obj.mimecode <= 35)
@@ -908,7 +908,7 @@ bool http::req::main(void)
                 }
             }
 
-            return live::sendurl(this, obj.url, obj.handler, t->mime, extras, extra.get("raw"));
+            return live::sendurl(this, obj.url, obj.handler, t->mime, extras, extra_attributes);
         }
     }else if(!strncmp(url.c_str(),"/ev/",4))
     {

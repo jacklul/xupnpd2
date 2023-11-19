@@ -61,7 +61,9 @@ namespace serialization
 
         bool validate_key(const std::string& key) const
         {
-            return std::all_of(key.begin(), key.end(), ::isalpha);
+            return std::all_of(key.begin(), key.end(), [](char c) {
+                return std::isalpha(c) || c == '-' || c == '_';
+            });
         }
 
         bool validate_value(const std::string& value) const

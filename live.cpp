@@ -365,7 +365,7 @@ int live::split_handlers(const std::string& s,std::list<handler_desc_t>& handler
     return num;
 }
 
-bool live::sendurl(http::req* req,const std::string& url,const std::string& handler,const char* mime,std::map<std::string,std::string>& extras,const std::string& raw)
+bool live::sendurl(http::req* req,const std::string& url,const std::string& handler,const char* mime,std::map<std::string,std::string>& extras,const serialization::data& extra_attributes)
 {
 // hls,http,udp,file
     req->is_keep_alive=false;
@@ -415,6 +415,9 @@ bool live::sendurl(http::req* req,const std::string& url,const std::string& hand
     env["URL"]=real_url;
     env["CONTENT_TYPE"]=mime;
 
+    if (!extra_attributes.get("user-agent").empty())
+        env["USER_AGENT"] = extra_attributes.get("user-agent");
+
 #ifdef _WIN32
     {
         const char* p=getenv("SystemRoot");
@@ -432,8 +435,8 @@ bool live::sendurl(http::req* req,const std::string& url,const std::string& hand
 
     bool redirect_to_raw_url = false;
 
-    if (raw != "")
-        redirect_to_raw_url = raw == "true" ? true : false;
+    if (extra_attributes.get("raw") != "")
+        redirect_to_raw_url = extra_attributes.get("raw") == "true" ? true : false;
     else if (cfg::raw_urls) {
         redirect_to_raw_url = true;
 

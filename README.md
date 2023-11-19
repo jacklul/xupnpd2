@@ -43,6 +43,7 @@ sudo apt-get install uuid libsqlite3 liblua5.3 libssl
     - Support `tvg-logo` EXTINF attribute (`logo` has priority)
     - A new field `raw` (`true/false`) is available for use in EXTINF attributes (overrides `raw_urls` setting)
     - Added compatibility charset `auto` which should work in every case
+    - Support `user-agent` EXTINF attribute
 - **Building**
     - Created a single **Makefile** that uses system provided libraries
     - Removed included libraries' source files from the repository

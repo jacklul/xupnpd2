@@ -381,6 +381,8 @@ int utils::scan_playlist(const std::string& path,int parentid,int& objid,std::st
                 else if (track_raw == "false" || track_raw == "0")
                     track_extra.set("raw", "false");
 
+                track_extra.set("user-agent", track_ext["user-agent"].c_str());
+
                 if(t && t->upnp_proto)
                 {
                     ++objid; ++count;
