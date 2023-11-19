@@ -31,6 +31,7 @@ sudo apt-get install uuid libsqlite3 liblua5.3 libssl
 - **HLS**
     - Support AES-128 encrypted streams through `hlse` handler
     - Handle playlists which are not using uppercase formatting
+    - Made `hlse` handler the default since it works just like `hls`
 - **SOAP**
     - Support remote logo links
     - Allow serving of the original stream URLs from the playlists (when `raw_urls=true` and `raw_urls_soap=true`)
