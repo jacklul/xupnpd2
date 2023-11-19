@@ -252,7 +252,7 @@ int db_sqlite::get_childs_count(const std::string& parentid)
 
 bool db_sqlite::find_objects_by_parent_id(const std::string& parentid,int limit,int offset,rowset_t& st)
 {
-    return st.prepare("SELECT %s FROM MEDIA WHERE parentid=%s ORDER BY name LIMIT %d OFFSET %d",__fields,parentid.c_str(),limit,offset);
+    return st.prepare("SELECT %s FROM MEDIA WHERE parentid=%s ORDER BY name COLLATE NOCASE ASC LIMIT %d OFFSET %d",__fields,parentid.c_str(),limit,offset);
 }
 
 bool db_sqlite::__search_objects_exp(const std::string& from,const std::string& to,int what,std::string& exp)
