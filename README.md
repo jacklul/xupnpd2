@@ -40,6 +40,7 @@ sudo apt-get install uuid libsqlite3 liblua5.3 libssl
     - Added `parent` function to print parent ID of a given ID
     - Added `fetch` function to return array with all infos about given ID
     - Make the sorting by name case-insensitive for `browse` function
+    - When `raw_urls=true` config variable or `raw=true` attribute is set then `browse` and `fetch` functions run defined translation function
 - **Scanning**
     - Include HTTPS links when scanning playlists
     - Support `tvg-logo` EXTINF attribute (`logo` has priority)
