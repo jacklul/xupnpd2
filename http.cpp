@@ -896,11 +896,11 @@ bool http::req::main(void)
             serialization::data extra_attributes = serialization::deserialize(obj.extra);
 
             if (!strncmp(ext.c_str(), "m3u", 3)) {
-                utils::translate_url(&obj.url, obj.handler);
-
                 bool raw_url = cfg::raw_urls || extra_attributes.get("raw") == "true";
 
                 if (raw_url) {
+                    utils::translate_url(&obj.url, obj.handler);
+
                     if (obj.mimecode >= 34 && obj.mimecode <= 35)
                         return live::sendredirect(this, obj.url, (mime::get_by_id(11)->mime));
                     else
