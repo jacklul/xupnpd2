@@ -67,7 +67,7 @@ namespace hls_new
 
         void doit(int fd);
     public:
-        metastream(void):stream_id(0),refresh_period(0),last_update_time(0),
+        metastream(void):stream_id(-1),refresh_period(0),last_update_time(0),
 #ifndef _WIN32
             fp(NULL),pid((pid_t)-1)
                 { pfd[0]=pfd[1]=-1; }

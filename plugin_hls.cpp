@@ -95,7 +95,7 @@ void hls::sendurl2(const std::string& url)
 
     std::string user_agent;
 
-    int stream_id=0;
+    int stream_id=-1;
 
     split_url(url,stream_url,user_agent,&stream_id);
 
@@ -221,7 +221,7 @@ void hls::sendurl3(const std::string& url)
 
     std::string user_agent;
 
-    int stream_id=0;
+    int stream_id=-1;
 
     split_url(url,stream_url,user_agent,&stream_id);
 
@@ -349,7 +349,7 @@ void hls::sendurl(const std::string& url)
 
     std::string user_agent;
 
-    int stream_id=0;
+    int stream_id=-1;
 
     split_url(url,stream_url,user_agent,&stream_id);
 

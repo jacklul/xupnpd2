@@ -582,6 +582,9 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
 
     std::string stream_url;
 
+    int bandwidth = 0;
+    int stream_bandwidth = 0;
+
 #ifndef NO_SSL
     static const char key_tag[] = "#EXT-X-KEY:";
     std::string key_method;
@@ -617,6 +620,41 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
 
             }else if(!strncasecmp(buf,streaminf_tag,sizeof(streaminf_tag)-1)) {
                 st=2;
+
+                char* p = buf + sizeof(streaminf_tag) - 1;
+
+                while (*p == ' ')
+                    p++;
+
+                std::string stream_info(p);
+
+                size_t start_pos = 0;
+                size_t end_pos = 0;
+
+                while (end_pos < stream_info.size())
+                {
+                    while (end_pos < stream_info.size() && stream_info[end_pos] != ',')
+                        end_pos++;
+
+                    std::string token = stream_info.substr(start_pos, end_pos - start_pos);
+                    size_t equal_pos = token.find('=');
+
+                    if (equal_pos != std::string::npos) {
+                        std::string key = utils::__to_uppercase(token.substr(0, equal_pos));
+                        std::string value = token.substr(equal_pos + 1);
+
+                        if (!value.empty() && (value.front() == '"' || value.front() == '\'') && value.front() == value.back()) {
+                            value = value.substr(1, value.size() - 2);
+                        }
+
+                        if (key == "BANDWIDTH") {
+                            bandwidth = stoi(value);
+                        }
+                    }
+
+                    start_pos = end_pos + 1;
+                    end_pos = start_pos;
+                }
             }else if(!strncasecmp(buf,seq_tag,sizeof(seq_tag)-1))
             {
                 char* endptr=NULL;
@@ -710,8 +748,10 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
 
                 }else if(st==2)
                 {
-                    if(stream_idx<=stream_id)
-                        stream_url=buf;
+                    if (stream_idx <= stream_id || (stream_id == -1 && bandwidth > stream_bandwidth)) {
+                        stream_url = buf;
+                        stream_bandwidth = bandwidth;
+                    }
 
                     stream_idx++;
                 }

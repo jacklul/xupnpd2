@@ -40,7 +40,7 @@ void hls_decrypt::sendurl(const std::string& url)
 
     hls::context ctx;
     std::string stream_url, user_agent;
-    int stream_id = 0;
+    int stream_id = -1;
 
     hls::split_url(url, stream_url, user_agent, &stream_id);
 
