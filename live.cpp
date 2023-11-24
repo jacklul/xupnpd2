@@ -558,9 +558,11 @@ bool live::sendplaylist(http::req* req, const std::string& type, const std::stri
     std::string contents;
 
     if (utils::__is_number(target, target.length())) { // provided objid
-        contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:86400\n#EXT-X-MEDIA-SEQUENCE:1\n#EXTINF:86400\n%s.%s\n", target.c_str(), (!target_ext.empty() ? target_ext : cfg::upnp_live_type).c_str());
+        //contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:86400\n#EXT-X-MEDIA-SEQUENCE:1\n#EXTINF:86400\n%s.%s\n", target.c_str(), (!target_ext.empty() ? target_ext : cfg::upnp_live_type).c_str());
+        contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:-1,Stream\n%s.%s\n", target.c_str(), (!target_ext.empty() ? target_ext : cfg::upnp_live_type).c_str());
     } else { // provided url
-        contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-STREAM-INF:PROGRAM-ID=1\n%s\n", target.c_str());
+        //contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-STREAM-INF:PROGRAM-ID=1\n%s\n", target.c_str());
+        contents = utils::format("#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:-1,Stream\n%s\n", target.c_str());
     }
 
     req->headers(200, false, contents.length(), pmime->mime);

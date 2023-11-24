@@ -896,16 +896,18 @@ bool http::req::main(void)
             serialization::data extra_attributes = serialization::deserialize(obj.extra);
 
             if (!strncmp(ext.c_str(), "m3u", 3)) {
-                bool raw_url = cfg::raw_urls || extra_attributes.get("raw") == "true";
+                mime::type_t* pls_mime = mime::get_by_id(11);
 
-                if (raw_url) {
+                if (cfg::raw_urls || extra_attributes.get("raw") == "true") {
                     utils::translate_url(&obj.url, obj.handler);
 
                     if (obj.mimecode >= 34 && obj.mimecode <= 35)
-                        return live::sendredirect(this, obj.url, (mime::get_by_id(11)->mime));
+                        return live::sendredirect(this, obj.url, pls_mime->mime);
                     else
                         return live::sendplaylist(this, ext, obj.url, t->name);
                 }
+
+                return live::sendplaylist(this, ext, obj.objid, t->name);
             }
 
             return live::sendurl(this, obj.url, obj.handler, t->mime, extras, extra_attributes);
