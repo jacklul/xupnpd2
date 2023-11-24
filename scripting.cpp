@@ -6,6 +6,7 @@
 
 #include "scripting.h"
 #include "plugin_lua.h"
+#include "mime.h"
 
 extern "C"
 {
@@ -54,6 +55,8 @@ namespace scripting
     int lua_browse(lua_State* L);
     int lua_parent(lua_State* L);
     int lua_fetch(lua_State* L);
+    int lua_mime_by_id(lua_State* L);
+    int lua_mime_by_name(lua_State* L);
 }
 
 
@@ -108,6 +111,8 @@ bool scripting::main(http::req& req,const std::string& filename)
     lua_register(st,"browse",lua_browse);
     lua_register(st,"parent",lua_parent);
     lua_register(st,"fetch",lua_fetch);
+    lua_register(st,"mime_by_id",lua_mime_by_id);
+    lua_register(st,"mime_by_name",lua_mime_by_name);
 
     for(std::map<std::string,std::string>::const_iterator it=req.hdrs.begin();it!=req.hdrs.end();++it)
     {
@@ -364,7 +369,7 @@ void scripting::__handle_raw_urls(lua_State* L, const std::string* handler, cons
     }
 }
 
-void scripting::__insert_fields(lua_State* L, const db::object_t* obj)
+void scripting::__insert_db_fields(lua_State* L, const db::object_t* obj)
 {
     const char* fields[] = {"objid", "parentid", "objtype", "items", "handler", "mimecode", "length", "name", "url", "logo", "uuid", "extra"};
 
@@ -413,7 +418,66 @@ int scripting::lua_fetch(lua_State* L)
     lua_newtable(L);
 
     scripting::__handle_raw_urls(L, &obj.handler, &obj.extra, &obj.url);
-    scripting::__insert_fields(L, &obj);
+    scripting::__insert_db_fields(L, &obj);
+
+    return 1;
+}
+
+void scripting::__insert_mime_fields(lua_State* L, const mime::type_t* mime)
+{
+    const char* fields[] = {"id", "type", "name", "alias", "mime", "upnp_proto", "upnp_type", "dlna_extras"};
+
+    size_t num = sizeof(fields) / sizeof(fields[0]);
+
+    for (size_t i = 0; i < num; ++i)
+    {
+        lua_pushstring(L, fields[i]);
+
+        if (strcmp(fields[i], "id") == 0)
+            lua_pushinteger(L, mime->id);
+        else if (strcmp(fields[i], "type") == 0)
+            lua_pushinteger(L, mime->type);
+        else if (strcmp(fields[i], "name") == 0)
+            lua_pushstring(L, mime->name);
+        else if (strcmp(fields[i], "alias") == 0)
+            lua_pushstring(L, mime->alias);
+        else if (strcmp(fields[i], "mime") == 0)
+            lua_pushstring(L, mime->mime);
+        else if (strcmp(fields[i], "upnp_proto") == 0)
+            lua_pushstring(L, mime->upnp_proto);
+        else if (strcmp(fields[i], "upnp_type") == 0)
+            lua_pushstring(L, mime->upnp_type);
+        else if (strcmp(fields[i], "dlna_extras") == 0)
+            lua_pushstring(L, mime->dlna_extras);
+
+        lua_rawset(L, -3);
+    }
+}
+
+int scripting::lua_mime_by_id(lua_State* L)
+{
+    mime::type_t* mime = mime::get_by_id(luaL_checkinteger(L,1));
+
+    if (!mime)
+        return 0;
+
+    lua_newtable(L);
+
+    __insert_mime_fields(L, mime);
+
+    return 1;
+}
+
+int scripting::lua_mime_by_name(lua_State* L)
+{
+    mime::type_t* mime = mime::get_by_name(luaL_checkstring(L,1));
+
+    if (!mime)
+        return 0;
+
+    lua_newtable(L);
+
+    __insert_mime_fields(L, mime);
 
     return 1;
 }

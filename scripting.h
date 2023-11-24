@@ -9,6 +9,7 @@
 
 #include "http.h"
 #include "db.h"
+#include "mime.h"
 
 extern "C"
 {
@@ -25,7 +26,9 @@ namespace scripting
 
     void __handle_raw_urls(lua_State* L, const std::string* handler, const std::string* extra, std::string* url);
 
-    void __insert_fields(lua_State* L, const db::object_t* obj);
+    void __insert_db_fields(lua_State* L, const db::object_t* obj);
+
+    void __insert_mime_fields(lua_State* L, const mime::type_t* mime);
 }
 
 #endif
