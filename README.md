@@ -43,6 +43,7 @@ sudo apt-get install uuid libsqlite3 liblua5.3 libssl
     - Make the sorting by name case-insensitive for `browse` function
     - When `raw_urls=true` config variable or `raw=true` attribute is set then `browse` and `fetch` functions run defined translation function
     - Added `mime_by_id` and `mime_by_name` functions to return mime object by mime ID or name (extension)
+    - Added `translate_url` function to trigger URL translation function from the web interface
 - **Scanning**
     - Include HTTPS links when scanning playlists
     - Support `tvg-logo` EXTINF attribute (`logo` has priority)

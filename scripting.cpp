@@ -57,6 +57,7 @@ namespace scripting
     int lua_fetch(lua_State* L);
     int lua_mime_by_id(lua_State* L);
     int lua_mime_by_name(lua_State* L);
+    int lua_translate_url(lua_State* L);
 }
 
 
@@ -113,6 +114,7 @@ bool scripting::main(http::req& req,const std::string& filename)
     lua_register(st,"fetch",lua_fetch);
     lua_register(st,"mime_by_id",lua_mime_by_id);
     lua_register(st,"mime_by_name",lua_mime_by_name);
+    lua_register(st,"translate_url",lua_translate_url);
 
     for(std::map<std::string,std::string>::const_iterator it=req.hdrs.begin();it!=req.hdrs.end();++it)
     {
@@ -478,6 +480,18 @@ int scripting::lua_mime_by_name(lua_State* L)
     lua_newtable(L);
 
     __insert_mime_fields(L, mime);
+
+    return 1;
+}
+
+int scripting::lua_translate_url(lua_State* L)
+{
+    std::string url = luaL_checkstring(L,1);
+    std::string handler = luaL_checkstring(L,2);
+
+    utils::translate_url(&url, handler);
+
+    lua_pushstring(L, url.c_str());
 
     return 1;
 }
