@@ -739,7 +739,11 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
                             }
                         }
 
+#ifndef NO_SSL
                         chunks.push_back(cur_id,track_length,url,key_method,key_url,key_iv);
+#else
+                        chunks.push_back(cur_id,track_length,url);
+#endif
                     }
 
                     track_length=0;
