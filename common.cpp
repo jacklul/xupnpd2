@@ -95,7 +95,8 @@ namespace cfg
     bool upnp_hdr_content_disp=false;
     bool raw_urls=false;
     std::string raw_urls_exclude;
-    bool raw_urls_soap=false;
+    bool raw_urls_http=true;
+    bool raw_urls_soap=true;
     int log_level=utils::log_info;
     bool disable_dlna_extras=false;
     std::string db_file;
@@ -162,6 +163,7 @@ namespace cfg
         { "upnp_hdr_content_disp",      tbol,   0,      0,      &upnp_hdr_content_disp          },
         { "raw_urls",                   tbol,   0,      0,      &raw_urls                       },
         { "raw_urls_exclude",           tstr,   0,      256,    &raw_urls_exclude               },
+        { "raw_urls_http",              tbol,   0,      0,      &raw_urls_http                  },
         { "raw_urls_soap",              tbol,   0,      0,      &raw_urls_soap                  },
         { "log_level",                  tint,   -8,     8,      &log_level                      },
         { "disable_dlna_extras",        tbol,   0,      0,      &disable_dlna_extras            },

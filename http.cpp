@@ -896,9 +896,8 @@ bool http::req::main(void)
             serialization::data extra_attributes = serialization::deserialize(obj.extra);
 
             if (!strncmp(ext.c_str(), "m3u", 3)) {
-                mime::type_t* pls_mime = mime::get_by_id(11);
-
-                if (cfg::raw_urls || extra_attributes.get("raw") == "true") {
+                if (cfg::raw_urls_http && (cfg::raw_urls || extra_attributes.get("raw") == "true")) {
+                    mime::type_t* pls_mime = mime::get_by_id(11);
                     utils::translate_url(&obj.url, obj.handler);
 
                     if (obj.mimecode >= 34 && obj.mimecode <= 35)

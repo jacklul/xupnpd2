@@ -20,14 +20,15 @@ sudo apt-get install uuid libsqlite3 liblua5.3 libssl
         - `uuid_file` - UUID file to save generated UUID to (only when `upnp_device_uuid` is not set)
     - Handle correctly URLs that start with a slash (absolute address)
     - Serve original stream URLs from the playlists instead of passing data through (`raw_urls` config variable)
+    - Added `raw_urls_http` config variable to control whenever to affect HTTP responses (when `raw_urls=true`)
+    - Added `raw_urls_soap` config variable to control whenever to affect SOAP/UPNP responses (when `raw_urls=true`)
     - Added `raw_urls_exclude` config variable to exclude streams handled by set handlers from being served as raw URL (when `raw_urls=true`)
-    - Added `raw_urls_soap` config variable to control whenever to also affect SOAP responses (when showing raw URL)
 - **HTTP**
     - Added SSL support through [OpenSSL](https://www.openssl.org) library
     - Support modification of `User-Agent` header through `http_user_agent` config variable
     - Correctly return 404 code for not found files and 403 when trying to access directories directly
-    - When specific stream is forced to use raw URL its stream link becomes a 302 redirect (when showing raw URL)
-    - Return playlist file when opening `/stream/ID.m3u8` (or `/stream/ID.m3u`) (when showing raw URL)
+    - When specific stream is forced to use raw URL its stream link becomes a 302 redirect (when `raw_urls=true` and `raw_urls_http=true`)
+    - Return playlist file when opening `/stream/ID.m3u8` (or `/stream/ID.m3u`)
 - **HLS**
     - Support AES-128 encrypted streams through `hlse` handler
     - Handle playlists which are not using uppercase formatting

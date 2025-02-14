@@ -435,18 +435,20 @@ bool live::sendurl(http::req* req,const std::string& url,const std::string& hand
 
     bool redirect_to_raw_url = false;
 
-    if (extra_attributes.get("raw") != "")
-        redirect_to_raw_url = extra_attributes.get("raw") == "true" ? true : false;
-    else if (cfg::raw_urls) {
-        redirect_to_raw_url = true;
+    if (cfg::raw_urls_http) {
+        if (extra_attributes.get("raw") != "")
+            redirect_to_raw_url = extra_attributes.get("raw") == "true" ? true : false;
+        else if (cfg::raw_urls) {
+            redirect_to_raw_url = true;
 
-        if (!cfg::raw_urls_exclude.empty()) {
-            for(std::list<handler_desc_t>::const_iterator it = handlers.begin(); it != handlers.end(); ++it) {
-                const std::string& handler = (*it).handler;
+            if (!cfg::raw_urls_exclude.empty()) {
+                for(std::list<handler_desc_t>::const_iterator it = handlers.begin(); it != handlers.end(); ++it) {
+                    const std::string& handler = (*it).handler;
 
-                if (cfg::raw_urls_exclude.find(handler) != std::string::npos) {
-                    redirect_to_raw_url = false;
-                    break;
+                    if (cfg::raw_urls_exclude.find(handler) != std::string::npos) {
+                        redirect_to_raw_url = false;
+                        break;
+                    }
                 }
             }
         }

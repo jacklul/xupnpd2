@@ -68,6 +68,7 @@ namespace cfg
     extern bool         upnp_hdr_content_disp;
     extern bool         raw_urls;
     extern std::string  raw_urls_exclude;
+    extern bool         raw_urls_http;
     extern bool         raw_urls_soap;
     extern int          log_level;
     extern bool         disable_dlna_extras;
