@@ -15,7 +15,7 @@ env:
 jobs:
   build:
     concurrency: ci-build-${{ github.ref_name }}-${{ matrix.variant }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     continue-on-error: ${{ matrix.allow-failure }}
     strategy:
       fail-fast: false
@@ -38,7 +38,7 @@ jobs:
 
     - run: bash /tmp/build.sh "${{ matrix.variant }}"
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: ${{ env.PLATFORM != '' && env.ARCHITECTURE != '' }}
       with:
         name: build-${{ github.ref_name }}-${{ env.PLATFORM }}-${{ env.ARCHITECTURE }}
@@ -52,30 +52,42 @@ jobs:
       pages: write
       id-token: write
       contents: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: .github
           sparse-checkout-cone-mode: false
 
+      - run: ls -al
+
       - run: cp .github/upload.sh /tmp
 
-      - run: git sparse-checkout disable
+      - run: |
+          git sparse-checkout disable
+          rm -fr .git .github
 
       - uses: actions/checkout@v4
         continue-on-error: true
         with:
           ref: gh-pages
 
-      - uses: actions/download-artifact@v3
+      - run: ls -al
+
+      - uses: actions/download-artifact@v4
         with:
           path: ${{ env.ARTIFACTS_PATH }}
 
+      - run: ls -al
+
       - run: bash /tmp/upload.sh "${{ env.ARTIFACTS_PATH }}"
+
+      - run: ls -al
 
       - run: git branch -m gh-pages gh-pages.old
         continue-on-error: true
+
+      - run: ls -al
 
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
