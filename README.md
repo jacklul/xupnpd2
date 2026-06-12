@@ -23,6 +23,7 @@ sudo apt-get install uuid libsqlite3 liblua5.3 libssl
     - Added `raw_urls_http` config variable to control whenever to affect HTTP responses (when `raw_urls=true`)
     - Added `raw_urls_soap` config variable to control whenever to affect SOAP/UPNP responses (when `raw_urls=true`)
     - Added `raw_urls_exclude` config variable to exclude streams handled by set handlers from being served as raw URL (when `raw_urls=true`)
+    - Increased some buffers from `1024` to `4096` to allow handling of bigger data sizes (like stream URLs)
 - **HTTP**
     - Added SSL support through [OpenSSL](https://www.openssl.org) library
     - Support modification of `User-Agent` header through `http_user_agent` config variable
@@ -37,6 +38,7 @@ sudo apt-get install uuid libsqlite3 liblua5.3 libssl
 - **SOAP**
     - Support remote logo links
     - Allow serving of the original stream URLs from the playlists (when `raw_urls=true` and `raw_urls_soap=true`)
+    - Increased XML output buffer from `1024` to `8192` to support bigger data sizes
 - **LUA**
     - An additional field `use_raw_url` is available in returned data by function `browse`
     - Added `parent` function to print parent ID of a given ID

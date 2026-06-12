@@ -453,7 +453,7 @@ bool hls::stream::_open(const std::string& url,const std::string& range,const st
 
         std::string code;
 
-        char temp[1024];
+        char temp[4096];
 
         while((gets(temp,sizeof(temp)))>0)
         {
@@ -568,7 +568,7 @@ int hls::stream::parse_stream_info(int stream_id,chunks_list& chunks)
 
     static const char extinf_tag[]=     "#EXTINF:";
 
-    char buf[1024];
+    char buf[4096];
 
     int idx=0;
 

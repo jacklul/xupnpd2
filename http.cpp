@@ -372,7 +372,7 @@ void http::process_query(sockaddr_in& sin,stream& fp)
 
         bool is_post=false;
 
-        char buf[1024];
+        char buf[4096];
 
         int buf_len;
 
@@ -730,7 +730,7 @@ bool http::req::sendfile(const std::string& filename,const std::map<std::string,
         {
             if(st.st_size>0)
             {
-                char buf[1024];
+                char buf[4096];
 
                 ssize_t n;
 

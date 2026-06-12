@@ -148,7 +148,7 @@ int luas::lua_fetch(lua_State* L)
 
 int luas::lua_trace_level(lua_State* L,int level)
 {
-    char ss[1024]; int n=0;
+    char ss[4096]; int n=0;
 
     int count=lua_gettop(L);
 

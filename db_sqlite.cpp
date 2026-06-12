@@ -98,7 +98,7 @@ void db_sqlite::end(void)
 
 bool db_sqlite::stmt::prepare(const char* sql,...)
 {
-    char s[1024];
+    char s[4096];
 
     va_list ap;
     va_start(ap,sql);
@@ -178,7 +178,7 @@ bool db_sqlite::stmt::fetch(object_t& row)
 
 bool db_sqlite::exec(const char* sql,...)
 {
-    char stmt[1024];
+    char stmt[4096];
 
     va_list ap;
     va_start(ap,sql);

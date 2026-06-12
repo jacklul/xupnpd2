@@ -277,7 +277,7 @@ bool hls_new::metastream::get_next_chunk_url(std::string& url)
     if(!fp)
         return false;
 
-    char buf[1024];
+    char buf[4096];
 
     if(!fgets(buf,sizeof(buf),fp))
         return false;

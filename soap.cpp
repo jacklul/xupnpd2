@@ -312,13 +312,15 @@ bool soap::serialize_media(const db::object_t& row,std::string& ss,const std::st
 
     if(objtype==mime::cont)
     {
-        char buf[1024];
+        char buf[8192];
 
         int n=snprintf(buf,sizeof(buf),"<container id=\"%s\" childCount=\"%s\" parentID=\"%s\" restricted=\"true\"><dc:title>%s</dc:title><upnp:class>%s</upnp:class></container>",
             row.objid.c_str(),row.items.c_str(),row.parentid.c_str(),esc(row.name).c_str(),mime::upnp_container);
 
-        if(n==-1 || n>=sizeof(buf))
-            n=sizeof(buf)-1;
+        if (n < 0 || n >= sizeof(buf)) {
+            utils::trace(utils::log_err, "Buffer overflow detected in soap::serialize_media for container id %s", row.objid.c_str());
+            return false;
+        }
 
         ss.append(buf,n);
     }else
@@ -392,13 +394,18 @@ bool soap::serialize_media(const db::object_t& row,std::string& ss,const std::st
             utils::translate_url(&url, row.handler);
         }
 
-        char buf[1024];
+        char buf[8192];
 
         int n=snprintf(buf,sizeof(buf),
             "<item id=\"%s\" parentID=\"%s\" restricted=\"true\"><dc:title>%s</dc:title><upnp:class>%s</upnp:class>%s%s<res size=\"%s\""
             " protocolInfo=\"%s%s\">%s</res></item>",
             row.objid.c_str(),row.parentid.c_str(),esc(row.name).c_str(),t->upnp_type,
             artist.c_str(),logo.c_str(),length.c_str(),t->upnp_proto,t->dlna_extras,url.c_str());
+
+        if (n < 0 || n >= sizeof(buf)) {
+            utils::trace(utils::log_err, "Buffer overflow detected in soap::serialize_media for object id %s", row.objid.c_str());
+            return false;
+        }
 
         ss.append(buf,n);
     }

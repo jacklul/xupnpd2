@@ -64,7 +64,7 @@ namespace live
 
         HANDLE input_fd=((thread_ctx_t*)p)->input_fd;
 
-        char buf[1024];
+        char buf[4096];
 
         for(;;)
         {
@@ -489,7 +489,7 @@ bool live::sendurl(http::req* req,const std::string& url,const std::string& hand
 
             if(FD_ISSET(output_fd,&fdset))
             {
-                char buf[1024];
+                char buf[4096];
 
                 if(read(output_fd,buf,sizeof(buf))<1)
                     break;

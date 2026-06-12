@@ -16,7 +16,7 @@ struct sockaddr_in;
 
 namespace http
 {
-    static const int max_buf_size=1024;
+    static const int max_buf_size=4096;
 
     extern volatile bool quit;
 
